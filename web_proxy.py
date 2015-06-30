@@ -26,7 +26,7 @@ class WebProxy(object):
             os.makedirs(self.conf.log_path)
 
     def main(self):
-        self.rest_server.run()
+        self.rest_server.run_server()
 
 if __name__=="__main__":
     server=WebProxy()

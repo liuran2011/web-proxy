@@ -14,14 +14,14 @@ class NginxManager(object):
     def _parse_config(self,path,file):
         uri_prefix=None
         port=None
-
-        for line in open("/".join(path,file),"r"):
+        print path,file
+        for line in open("/".join([path,file]),"r"):
             line=line.strip().rstrip()
             if line.startswith("server_name"):
                 key,value=line.split()
                 uri_prefix=value.rstrip(";")
             elif line.startswith("listen"):
-                key,value=line,split()
+                key,value=line.split()
                 port=value.rstrip(";")
         
         if uri_prefix and port:
@@ -47,14 +47,18 @@ class NginxManager(object):
                 'critical':'crit'}
         return levels.get(self.conf.log_level,'notice')
 
+    def _public_url(self,port):
+        return "http://"+self.conf.rest_server_address+":"+str(port)
+
     def add_proxy(self,uri_prefix,proxy_uri):
-        if self.port_mgr.port_exist(uri_prefix):
-            return
+        port=self.port_mgr.find_port(uri_prefix)
+        if port:
+            return self._public_url(port)
 
         port=self.port_mgr.alloc_port(uri_prefix)
         if not port:
             self.log.error("uri_preifx: %s add proxy failed. port not avail."%(uri_prefix))
-            return
+            return None
 
         config_file=self.conf.nginx_config_path+"/sites-enabled/"+uri_prefix
 
@@ -68,6 +72,8 @@ class NginxManager(object):
             f.close()
 
         self._reload()
+
+        return self._public_url(port)
 
     def del_proxy(self,uri_prefix):
         path=self.conf.nginx_config_path+"/sites-enabled/"+uri_prefix
