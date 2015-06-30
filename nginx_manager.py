@@ -28,7 +28,6 @@ class NginxManager(object):
             self.port_mgr.map_port(uri_prefix,port)
             
     def _load_proxy_config(self):
-        #TODO load proxy config from disk
         path=self.conf.nginx_config_path+"/sites-enabled"
         
         for entry in os.listdir(path):

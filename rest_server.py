@@ -15,14 +15,6 @@ class RestServer(object):
                             'del_proxy_config',
                             self.del_proxy_config,
                             methods=['DELETE'])
-        self.app.add_url_rule(self.conf.url_prefix+'/user',
-                             'user_add',
-                             self.user_add,
-                             methods=['POST'])
-
-    def user_add(self):
-        print request.json
-        self.log.debug("add_user %s"%request.json)
 
     def add_proxy_config(self):
         self.log.debug("add_proxy_config %s"%request.json)

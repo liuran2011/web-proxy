@@ -23,7 +23,7 @@ class PortMgr(object):
         _port_list[port-self.proxy_min_port]=0
 
     def alloc_port(self,instance_name):
-        port=_port_map.get(instance_name):
+        port=_port_map.get(instance_name)
         if port:
             return port
 
