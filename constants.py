@@ -5,6 +5,8 @@ WEB_PROXY_DEFAULT_LOG_LEVEL="notice"
 WEB_PROXY_DEFAULT_LOG_PATH="/var/log/web_proxy"
 
 WEB_PROXY_PORT=10000
+WEB_PROXY_MIN_PORT=22222
+WEB_PROXY_MAX_PORT=33333
 
 NGINX_CONFIG_PATH="/etc/nginx"
 
@@ -14,7 +16,11 @@ NGINX_WEB_PROXY_FILE_TEMPLATE="""
     server {
         listen %d ;
         error_log %s %s;
-        include %s/*;
+        server_name %s;
+
+        location / {
+            proxy_pass %s;
+        }
     }
     """
 

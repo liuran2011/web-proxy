@@ -41,8 +41,12 @@ class Config:
         return self.args['rest_server_port']
 
     @property
-    def proxy_port(self):
-        return self.args['proxy_port']
+    def proxy_min_port(self):
+        return self.args['proxy_min_port']
+
+    @property
+    def proxy_max_port(self):
+        return self.args['proxy_max_port']
 
     def _parse_config_file_nginx(self,parser,section):
         opt='config_path'
@@ -68,13 +72,17 @@ class Config:
             self.log_path=parser.get(section,opt)
 
     def _parse_config_file_proxy(self,parser,section):
-        opt='port'
-        if parser.has_option(opt):
-            self.proxy_port=parser.get(section,opt)
-        
         opt='config_path'
         if parser.has_option(opt):
             self.proxy_config_path=parser.get(section,opt)
+
+        opt='min_port'
+        if parser.has_option(opt):
+            self.proxy_min_port=parser.get(section,opt)
+
+        opt='max_port'
+        if parser.has_option(opt):
+            self.proxy_max_port=parser.get(section,opt)
 
     def _parse_config_file(self):
         parser=ConfigParser.ConfigParser()
@@ -118,10 +126,14 @@ class Config:
                             default=REST_API_PORT,
                             type=int,
                             help="listen port of rest server")
-        parser.add_argument("--proxy_port",
-                            default=WEB_PROXY_PORT,
+        parser.add_argument("--proxy_min_port",
+                            default=WEB_PROXY_MIN_PORT,
                             type=int,
-                            help="proxy port of web proxy")
+                            help="proxy min port")
+        parser.add_argument("--proxy_max_port",
+                            default=WEB_PROXY_MAX_PORT,
+                            type=int,
+                            help="proxy max port")
         self.args=copy.deepcopy(parser.parse_args().__dict__)
 
     def get(self):
