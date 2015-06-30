@@ -1,0 +1,3 @@
+python-gevent
+python-flask
+nginx
