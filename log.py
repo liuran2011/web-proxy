@@ -8,7 +8,7 @@ class Logger(object):
         #rotate_handler.setLevel(self._get_log_level())
         formatter=logging.Formatter('[%(asctime)s][%(filename)s:%(lineno)d][%(levelname)s][%(message)s]')
         rotate_handler.setFormatter(formatter)
-        self.logger=logging.getLogger()
+        self.logger=logging.getLogger("web_proxy")
         self.logger.addHandler(rotate_handler)
         self.logger.setLevel(self._get_log_level())
 

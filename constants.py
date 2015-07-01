@@ -14,7 +14,7 @@ NGINX_WEB_PROXY_PATH="/var/run/web_proxy"
 NGINX_WEB_PROXY_FILE_NAME="web_proxy"
 NGINX_WEB_PROXY_FILE_TEMPLATE="""
     server {
-        listen %d ;
+        listen %d;
         error_log %s %s;
         server_name %s;
 

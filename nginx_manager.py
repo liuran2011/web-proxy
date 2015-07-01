@@ -14,7 +14,6 @@ class NginxManager(object):
     def _parse_config(self,path,file):
         uri_prefix=None
         port=None
-        print path,file
         for line in open("/".join([path,file]),"r"):
             line=line.strip().rstrip()
             if line.startswith("server_name"):
@@ -25,7 +24,7 @@ class NginxManager(object):
                 port=value.rstrip(";")
         
         if uri_prefix and port:
-            self.port_mgr.map_port(uri_prefix,port)
+            self.port_mgr.map_port(uri_prefix,int(port))
             
     def _load_proxy_config(self):
         path=self.conf.nginx_config_path+"/sites-enabled"

@@ -20,6 +20,9 @@ class RestServer(object):
     def _add_proxy_config(self):
         self.log.debug("add_proxy_config %s"%request.json)
 
+        if not request.json:
+            return jsonify({"error":"Bad Request"}),400
+
         result=[]
         for entry in request.json: 
             public_url=self.nginx_mgr.add_proxy(entry['uriPrefix'],
@@ -33,9 +36,9 @@ class RestServer(object):
                 item['result']="ok"
                 item['publicURL']=public_url
             
-            result.insert(copy.deepcopy(item))
+            result.append(copy.deepcopy(item))
 
-        return jsonify(result),200
+        return jsonify([result]),200
 
     def _del_proxy_config(self,uri_prefix):
         self.log.debug("del_proxy_config uri_prefix %s"%uri_prefix)
