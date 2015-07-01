@@ -25,11 +25,16 @@ class RestServer(object):
         return False
 
     def _sanity_check_proxy(self,request):
-        for uri_prefix,port in self.ngix_mgr():
+        proxy_del_list=[]
+
+        for uri_prefix,port in self.nginx_mgr:
             if not self._proxy_in_request(uri_prefix,request):
                 self.log.info("uri_prefix:%s port:%d not in add proxy config request. del it."
                              %(uri_prefix,port))
-                self.ngix_mgr.del_proxy(uri_prefix)
+                proxy_del_list.append(uri_prefix)
+
+        for node in proxy_del_list:
+            self.nginx_mgr.del_proxy(node)
 
     def _add_proxy_config(self):
         self.log.debug("add_proxy_config %s"%request.json)

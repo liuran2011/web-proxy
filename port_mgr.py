@@ -6,6 +6,9 @@ class PortMgr(object):
         self.port_list=[0 for x in range(self.conf.proxy_min_port,self.conf.proxy_max_port)]
         self.port_map={}
 
+    def __iter__(self):
+        return self.port_map.iteritems()
+
     def _set_port_inuse(self,port):
         self.port_list[port-self.conf.proxy_min_port]=1
 

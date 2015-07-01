@@ -12,11 +12,7 @@ class NginxManager(object):
         self._load_proxy_config()
   
     def __iter__(self):
-        self.port_mgr_iter=self.port_mgr.iteritems()
-        return self.port_mgr_iter
-
-    def __next__(self):
-        return next(self.port_mgr_iter)
+        return iter(self.port_mgr)
 
     def _parse_config(self,path,file):
         uri_prefix=None
