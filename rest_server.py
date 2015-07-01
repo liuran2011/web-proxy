@@ -17,6 +17,20 @@ class RestServer(object):
                             self._del_proxy_config,
                             methods=['DELETE'])
 
+    def _proxy_in_request(self,uri_prefix,request):
+        for req in request:
+            if req['uriPrefix']==uri_prefix:
+                return True
+        
+        return False
+
+    def _sanity_check_proxy(self,request):
+        for uri_prefix,port in self.ngix_mgr():
+            if not self._proxy_in_request(uri_prefix,request):
+                self.log.info("uri_prefix:%s port:%d not in add proxy config request. del it."
+                             %(uri_prefix,port))
+                self.ngix_mgr.del_proxy(uri_prefix)
+
     def _add_proxy_config(self):
         self.log.debug("add_proxy_config %s"%request.json)
 
@@ -32,13 +46,15 @@ class RestServer(object):
                   'result':'error',
                   'publicURL':None}
 
-            if not public_url:
+            if public_url:
                 item['result']="ok"
                 item['publicURL']=public_url
             
             result.append(copy.deepcopy(item))
+   
+        self._sanity_check_proxy(request.json)
 
-        return jsonify([result]),200
+        return jsonify({"url":result}),200
 
     def _del_proxy_config(self,uri_prefix):
         self.log.debug("del_proxy_config uri_prefix %s"%uri_prefix)

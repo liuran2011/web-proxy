@@ -10,10 +10,18 @@ class NginxManager(object):
         self.port_mgr=PortMgr(self.log,self.conf)
 
         self._load_proxy_config()
-   
+  
+    def __iter__(self):
+        self.port_mgr_iter=self.port_mgr.iteritems()
+        return self.port_mgr_iter
+
+    def __next__(self):
+        return next(self.port_mgr_iter)
+
     def _parse_config(self,path,file):
         uri_prefix=None
         port=None
+
         for line in open("/".join([path,file]),"r"):
             line=line.strip().rstrip()
             if line.startswith("server_name"):
@@ -24,6 +32,7 @@ class NginxManager(object):
                 port=value.rstrip(";")
         
         if uri_prefix and port:
+            self.log.info("nginx proxy exist. uri_prefix:%s port:%s"%(uri_prefix,port))
             self.port_mgr.map_port(uri_prefix,int(port))
             
     def _load_proxy_config(self):
@@ -47,7 +56,7 @@ class NginxManager(object):
         return levels.get(self.conf.log_level,'notice')
 
     def _public_url(self,port):
-        return "http://"+self.conf.rest_server_address+":"+str(port)
+        return "http://"+self.conf.proxy_public_address+":"+str(port)
 
     def add_proxy(self,uri_prefix,proxy_uri):
         port=self.port_mgr.find_port(uri_prefix)
@@ -58,6 +67,8 @@ class NginxManager(object):
         if not port:
             self.log.error("uri_preifx: %s add proxy failed. port not avail."%(uri_prefix))
             return None
+
+        self.log.info("nginx add proxy uri_prefix:%s port:%d"%(uri_prefix,port))
 
         config_file=self.conf.nginx_config_path+"/sites-enabled/"+uri_prefix
 
@@ -78,6 +89,8 @@ class NginxManager(object):
         path=self.conf.nginx_config_path+"/sites-enabled/"+uri_prefix
         if os.path.exists(path) and os.path.isfile(path):
             os.remove(path)
+
+        self.log.info("nginx del proxy uri_prefix:%s"%(uri_prefix))
 
         self.port_mgr.free_port(uri_prefix)
 

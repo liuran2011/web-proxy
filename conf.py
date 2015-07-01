@@ -11,13 +11,19 @@ class Config:
     def __init__(self):
         self._parse_arg()
        
-        if not self.rest_server_address:
-            print "rest server address invalid."
+        if (not self.proxy_public_address
+           or self.proxy_public_address=="127.0.0.1"  
+           or self.proxy_public_address=="0.0.0.0"):
+            print "proxy public address %s invalid."%(self.rest_server_address)
             sys.exit(1)
 
     @property
     def nginx_config_path(self):
         return self.args.nginx_config_path
+
+    @property
+    def proxy_public_address(self):
+        return self.args.proxy_public_address
 
     @property
     def proxy_config_path(self):
@@ -75,7 +81,8 @@ class Config:
             "log_path":WEB_PROXY_DEFAULT_LOG_PATH,
             "rest_server_port":REST_API_PORT,
             "proxy_min_port":WEB_PROXY_MIN_PORT,
-            "proxy_max_port":WEB_PROXY_MAX_PORT
+            "proxy_max_port":WEB_PROXY_MAX_PORT,
+            "rest_server_address":REST_API_ADDRESS
         }
 
         args,remaing_argv=parser.parse_known_args()
@@ -110,4 +117,8 @@ class Config:
         parser.add_argument("--proxy_max_port",
                             type=int,
                             help="proxy max port")
+        parser.add_argument("--proxy_public_address",
+                            type=str,
+                            help="proxy public address")
+
         self.args=parser.parse_args(remaing_argv)

@@ -12,13 +12,14 @@ class PortMgr(object):
     def _alloc_port(self):
         try:
             index=self.port_list.index(0)
+            self.port_list[index]=1
             return index+self.conf.proxy_min_port
         except ValueError as e:
             self.log.error("port exausted.")
             return None
 
     def _free_port(self,port):
-        self.port_list[port-self.proxy_min_port]=0
+        self.port_list[port-self.conf.proxy_min_port]=0
 
     def alloc_port(self,instance_name):
         port=self.port_map.get(instance_name)
@@ -39,7 +40,7 @@ class PortMgr(object):
             return
 
         self._free_port(port)
-        d.pop(instance_name)
+        self.port_map.pop(instance_name)
     
     def map_port(self,uri_prefix,port):
         inuse_port=self.port_map.get(uri_prefix)   
