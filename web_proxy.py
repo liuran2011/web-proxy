@@ -8,6 +8,7 @@ from conf import Config
 from nginx_manager import NginxManager
 from rest_server import RestServer
 from log import Logger
+from db import DB
 import os
 
 class WebProxy(object):
@@ -15,8 +16,9 @@ class WebProxy(object):
         self.conf=Config()
         self._prepare()
         self.log=Logger(self.conf)
-        self.nginx_mgr=NginxManager(self.conf,self.log)
-        self.rest_server=RestServer(self.conf,self.nginx_mgr,self.log)
+        self.db=DB(self.conf,self.log)
+        self.nginx_mgr=NginxManager(self.conf,self.log,self.db)
+        self.rest_server=RestServer(self.conf,self.nginx_mgr,self.log,self.db)
 
     def _prepare(self):
         if not os.path.exists(self.conf.proxy_config_path):

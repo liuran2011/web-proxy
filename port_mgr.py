@@ -1,62 +1,33 @@
+from db import DB
+
 class PortMgr(object):
-    def __init__(self,log,conf):
+    def __init__(self,log,conf,db):
         self.conf=conf
         self.log=log
-        
-        self.port_list=[0 for x in range(self.conf.proxy_min_port,self.conf.proxy_max_port)]
-        self.port_map={}
+        self.db=db
+        self.port_list=None
 
-    def __iter__(self):
-        return self.port_map.iteritems()
+        self._port_list_init()
 
-    def _set_port_inuse(self,port):
-        self.port_list[port-self.conf.proxy_min_port]=1
+    def _port_list_init(self):
+        self.port_list=self.db.find_one(DB.PORT_TABLE,None)
+        if not self.port_list:
+            self.log.info("port list table not exist, create it.")
+            self.port_list={DB.PORT_LIST_KEY:[0 for x in range(self.conf.proxy_min_port,self.conf.proxy_max_port)]}
+            self.db.insert(DB.PORT_TABLE,self.port_list)
+           
+        #TODO, check proxy_min_port and proxy_max_port if changed.
 
-    def _alloc_port(self):
+    def alloc_port(self):
         try:
-            index=self.port_list.index(0)
-            self.port_list[index]=1
+            index=self.port_list[DB.PORT_LIST_KEY].index(0)
+            self.port_list[DB.PORT_LIST_KEY][index]=1
+            self.db.update(DB.PORT_TABLE,None,self.port_list)
             return index+self.conf.proxy_min_port
         except ValueError as e:
             self.log.error("port exausted.")
             return None
 
-    def _free_port(self,port):
-        self.port_list[port-self.conf.proxy_min_port]=0
-
-    def alloc_port(self,instance_name):
-        port=self.port_map.get(instance_name)
-        if port:
-            return port
-
-        port=self._alloc_port() 
-        if not port:
-            return None
-
-        self.port_map[instance_name]=port
-
-        return port
-
-    def free_port(self,instance_name):
-        port=self.port_map.get(instance_name)
-        if not port:
-            return
-
-        self._free_port(port)
-        self.port_map.pop(instance_name)
-    
-    def map_port(self,uri_prefix,port):
-        inuse_port=self.port_map.get(uri_prefix)   
-        if inuse_port and inuse_port!=port:
-            self.log.warning("uri_preifx:%s already has port:%d"%(uri_prefix,port))
-            return
-
-        self._set_port_inuse(port)
-        self.port_map[uri_prefix]=port
-    
-    def find_port(self,uri_prefix):
-        port=self.port_map.get(uri_prefix)
-        if port:
-            return port
-
-        return None
+    def free_port(self,port):
+        self.port_list[DB.PORT_LIST_KEY][port-self.conf.proxy_min_port]=0
+        self.db.update(DB.PORT_TABLE,None,self.port_list)

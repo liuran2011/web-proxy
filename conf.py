@@ -16,6 +16,23 @@ class Config:
            or self.proxy_public_address=="0.0.0.0"):
             print "proxy public address %s invalid."%(self.rest_server_address)
             sys.exit(1)
+        
+        if self.rest_server_address=="127.0.0.1":
+            print "rest server address %s invalid"%(self.rest_server_address)
+            sys.exit(1)
+        
+        if (not self.mongodb_address 
+            or self.mongodb_address=="0.0.0.0"):
+            print "mongodb address %s invalid"%(self.mongodb_address)
+            sys.exit(1)
+
+    @property
+    def mongodb_address(self):
+        return self.args.mongodb_address
+
+    @property
+    def mongodb_port(self):
+        return self.args.mongodb_port
 
     @property
     def nginx_config_path(self):
@@ -58,6 +75,10 @@ class Config:
         return self.args.proxy_max_port
 
     def _parse_config_file(self,config_file,default_args):
+        if (not os.path.exists(config_file) 
+            or not os.path.isfile(config_file)):
+            return
+
         parser=ConfigParser.ConfigParser()
         parser.read(config_file)
       
@@ -65,6 +86,7 @@ class Config:
         default_args.update(dict(parser.items('rest')))
         default_args.update(dict(parser.items('log')))
         default_args.update(dict(parser.items('proxy')))
+        default_args.update(dict(parser.items('mongo')))
 
     def _parse_arg(self):
         parser=argparse.ArgumentParser(add_help=False)
@@ -82,7 +104,8 @@ class Config:
             "rest_server_port":REST_API_PORT,
             "proxy_min_port":WEB_PROXY_MIN_PORT,
             "proxy_max_port":WEB_PROXY_MAX_PORT,
-            "rest_server_address":REST_API_ADDRESS
+            "rest_server_address":REST_API_ADDRESS,
+            "mongodb_port":MONGO_DB_PORT
         }
 
         args,remaing_argv=parser.parse_known_args()
@@ -120,5 +143,11 @@ class Config:
         parser.add_argument("--proxy_public_address",
                             type=str,
                             help="proxy public address")
+        parser.add_argument("--mongodb_port",
+                            type=int,
+                            help="mongo db listen port")
+        parser.add_argument("--mongodb_address",
+                            type=str,
+                            help="mongo db listen address")
 
         self.args=parser.parse_args(remaing_argv)
