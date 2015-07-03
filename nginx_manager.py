@@ -13,8 +13,10 @@ class NginxManager(object):
 
         self._load_proxy_config()
 
-    def __iter__(self):
-        return self.db.find_limit(DB.PROXY_TABLE,None,{DB.URI_PREFIX_KEY:1})
+    def proxy_list(self):
+        res=self.db.find_limit(DB.PROXY_TABLE,None,{DB.URI_PREFIX_KEY:1})
+        for node in res:
+            yield node[DB.URI_PREFIX_KEY]            
 
     def _load_proxy_config(self):
         path=self.conf.nginx_config_path+"/sites-enabled"
@@ -47,7 +49,7 @@ class NginxManager(object):
         return "http://"+self.conf.proxy_public_address+":"+str(port)
 
     def add_proxy(self,uri_prefix,proxy_uri):
-        proxy_map=self.db.find_one(DB.PROXY_TABLE,{DB.URI_PREFIX_KEY,uri_prefix})
+        proxy_map=self.db.find_one(DB.PROXY_TABLE,{DB.URI_PREFIX_KEY:uri_prefix})
         if proxy_map:
             return self._public_url(proxy_map[DB.PORT_KEY]);
 
@@ -57,7 +59,7 @@ class NginxManager(object):
             return None
 
         self.log.info("nginx add proxy uri_prefix:%s port:%d"%(uri_prefix,port))
-        self.db.update(DB.PROXY_TABLE,
+        self.db.insert(DB.PROXY_TABLE,
                         {DB.URI_PREFIX_KEY:uri_prefix,
                         DB.WEB_URL_KEY:proxy_uri,
                         DB.PORT_KEY:port})

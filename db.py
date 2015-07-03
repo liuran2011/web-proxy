@@ -53,3 +53,12 @@ class DB(object):
 
     def find_limit(self,table,key,col):
         return self.db.__getattr__(table).find(key,col)
+
+    def add_to_set(self,table,key,set_name,value):
+        return self.db.__getattr__(table).update(key,{"$addToSet":{set_name:value}})
+
+    def add_to_set_multi(self,table,key,set_name,value_list):
+        return self.db.__getattr__(table).update(key,{"$addToSet":{set_name:{"$each":value_list}}})
+
+    def pull(self,table,key,set_name,value):
+        return self.db.__getattr__(table).update(key,{"$pull":{set_name:value}})

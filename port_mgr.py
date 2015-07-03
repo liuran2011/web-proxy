@@ -22,7 +22,7 @@ class PortMgr(object):
         try:
             index=self.port_list[DB.PORT_LIST_KEY].index(0)
             self.port_list[DB.PORT_LIST_KEY][index]=1
-            self.db.update(DB.PORT_TABLE,None,self.port_list)
+            self.db.update(DB.PORT_TABLE,{},self.port_list)
             return index+self.conf.proxy_min_port
         except ValueError as e:
             self.log.error("port exausted.")
@@ -30,4 +30,4 @@ class PortMgr(object):
 
     def free_port(self,port):
         self.port_list[DB.PORT_LIST_KEY][port-self.conf.proxy_min_port]=0
-        self.db.update(DB.PORT_TABLE,None,self.port_list)
+        self.db.update(DB.PORT_TABLE,{},self.port_list)

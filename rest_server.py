@@ -42,7 +42,7 @@ class RestServer(object):
         for user in request:
             req_uri_prefix_list+=map(lambda x:x[RestServer.URI_PREFIX],user[RestServer.WEB_INFO])
 
-        for uri_prefix in self.nginx_mgr:
+        for uri_prefix in self.nginx_mgr.proxy_list():
             if not uri_prefix in req_uri_prefix_list:
                 self.log.info("uri_prefix:%s not in add proxy config request. del it."
                              %(uri_prefix))
@@ -67,7 +67,8 @@ class RestServer(object):
     def _add_proxy_config_user(self,request):
         for req in request:
             self.user_mgr.add_user(req[RestServer.USER_NAME],
-                                  map(lambda arg: arg[RestServer.URI_PREFIX],req[RestServer.WEB_INFO]))
+                                  map(lambda arg: arg[RestServer.URI_PREFIX],
+                                        req[RestServer.WEB_INFO]))
 
     def _add_proxy_config(self):
         self.log.debug("add_proxy_config %s"%request.json)
@@ -79,7 +80,7 @@ class RestServer(object):
         
         self._add_proxy_config_user(request.json)
        
-        result=self._add_proxy_config_nginx(request.json[RestServer.WEB_INFO])
+        result=self._add_proxy_config_nginx(request.json)
         
         self._sanity_check(request.json)
 
@@ -87,19 +88,20 @@ class RestServer(object):
 
     def _add_proxy_config_nginx(self,request):
         result=[]
-        for entry in request: 
-            public_url=self.nginx_mgr.add_proxy(entry[RestServer.URI_PREFIX],
-                                                entry[RestServer.WEB_URL])
+        for user in request:
+            for entry in user[RestServer.WEB_INFO]: 
+                public_url=self.nginx_mgr.add_proxy(entry[RestServer.URI_PREFIX],
+                                                    entry[RestServer.WEB_URL])
 
-            item={RestServer.URI_PREFIX:entry[RestServer.URI_PREFIX],
-                  RestServer.RESULT:'error',
-                  RestServer.PUBLIC_URL:None}
+                item={RestServer.URI_PREFIX:entry[RestServer.URI_PREFIX],
+                      RestServer.RESULT:'error',
+                      RestServer.PUBLIC_URL:None}
 
-            if public_url:
-                item[RestServer.RESULT]="ok"
-                item[RestServer.PUBLIC_URL]=public_url
-            
-            result.append(copy.deepcopy(item))
+                if public_url:
+                    item[RestServer.RESULT]="ok"
+                    item[RestServer.PUBLIC_URL]=public_url
+                
+                result.append(copy.deepcopy(item))
 
         return jsonify({"url":result}),HTTP_OK
 
@@ -110,11 +112,14 @@ class RestServer(object):
             return jsonify({"error":HTTP_BAD_REQUEST_STR}),HTTP_BAD_REQUEST
 
         self.token_mgr.add_token(request.json[RestServer.USER_NAME],request.json[RestServer.TOKEN]) 
+        
+        return jsonify({RestServer.RESULT:"ok"}),HTTP_OK
 
     def _del_proxy_config(self,uri_prefix):
         self.log.debug("del_proxy_config uri_prefix %s"%uri_prefix)
         
         self.nginx_mgr.del_proxy(uri_prefix)
+        self.user_mgr.del_user_uri_prefix(uri_prefix)
 
         return jsonify({RestServer.RESULT:'ok'}),HTTP_OK
 

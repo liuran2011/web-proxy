@@ -13,14 +13,15 @@ class TokenMgr(object):
         return md5.hexdigest()
 
     def add_token(self,user,token):
-        token_map=self.db.find_one(DB.TOKEN_TABLE,{DB.USER_NAME_KEY,user})
+        token_map=self.db.find_one(DB.TOKEN_TABLE,{DB.USER_NAME_KEY:user})
         if not token_map:
             token_map={DB.USER_NAME_KEY:user,DB.TOKEN_KEY:token,DB.MD5_KEY:self._md5(token)}
             self.db.insert(DB.TOKEN_TABLE,token_map)
-        else:
+        
+        if token != token_map[DB.TOKEN_KEY]:
             token_map[DB.TOKEN_KEY]=token
             token_map[DB.MD5_KEY]=self._md5(token)
-            self.db.update({DB.USER_NAME_KEY:user},token_map)
+            self.db.update(DB.TOKEN_TABLE,{DB.USER_NAME_KEY:user},token_map)
 
     def del_token(self,user):
         self.db.remove(DB.TOKEN_TABLE,{DB.USER_NAME_KEY,user})
