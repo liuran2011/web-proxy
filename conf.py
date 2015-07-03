@@ -81,12 +81,21 @@ class Config:
 
         parser=ConfigParser.ConfigParser()
         parser.read(config_file)
-      
-        default_args.update(dict(parser.items('nginx')))
-        default_args.update(dict(parser.items('rest')))
-        default_args.update(dict(parser.items('log')))
-        default_args.update(dict(parser.items('proxy')))
-        default_args.update(dict(parser.items('mongo')))
+     
+        if parser.has_section('nginx'):
+            default_args.update(dict(parser.items('nginx')))
+
+        if parser.has_section('rest'):
+            default_args.update(dict(parser.items('rest')))
+
+        if parser.has_section('log'):
+            default_args.update(dict(parser.items('log')))
+
+        if parser.has_section('proxy'):
+            default_args.update(dict(parser.items('proxy')))
+
+        if parser.has_section('mongo'): 
+            default_args.update(dict(parser.items('mongo')))
 
     def _parse_arg(self):
         parser=argparse.ArgumentParser(add_help=False)
