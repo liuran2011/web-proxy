@@ -3,6 +3,10 @@ import copy
 from http_codes import *
 from token_mgr import TokenMgr
 from user_mgr import UserMgr
+from global_config import GlobalConfig
+from nginx_manager import NginxManager
+import re
+from auth import Auth
 
 class RestServer(object):
     URI_PREFIX="uriPrefix"
@@ -12,16 +16,29 @@ class RestServer(object):
     RESULT="result"
     TOKEN="token"
     WEB_INFO="webInfo"
+    MAIN_PAGE="mainPage"
 
     def __init__(self,conf,nginx_mgr,log,db):
         self.conf=conf
         self.log=log
         self.nginx_mgr=nginx_mgr
         self.db=db
+
+        self.global_cfg=GlobalConfig(self.conf,self.log,self.db)
+        self.nginx_mgr=NginxManager(self.conf,self.log,self.db,self.global_cfg)
         self.token_mgr=TokenMgr(self.conf,self.log,self.db)
         self.user_mgr=UserMgr(self.conf,self.log,self.db)
+        self.auth=Auth(self.log,self.token_mgr)
 
         self.app=Flask(__name__)
+        self.app.add_url_rule(self.conf.url_prefix+'/auth',
+                              'auth',
+                              self._auth,
+                              method=['GET'])
+        self.app.add_url_rule(self.conf.url_prefix+'/global-config',
+                              'global_config',
+                              self._global_config,
+                              method=['POST'])
         self.app.add_url_rule(self.conf.url_prefix+'/token',
                               'add_token',
                               self._add_token,
@@ -34,6 +51,14 @@ class RestServer(object):
                             'del_proxy_config',
                             self._del_proxy_config,
                             methods=['DELETE'])
+   
+    def _auth(self):
+        return self.auth.auth(request.headers)
+
+    def _global_config(self):
+        self.global_cfg.update(request.json)
+        
+        return jsonify({RestServer.RESULT,"ok"}),HTTP_OK
 
     def _sanity_check_proxy(self,request):
         proxy_del_list=[]

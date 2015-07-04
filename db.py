@@ -8,6 +8,7 @@ class DB(object):
     USER_TABLE="user"
     PROXY_TABLE="proxy"
     PORT_TABLE="port"
+    GLOBAL_CONF_TABLE="global_config"
 
     USER_NAME_KEY="userName"
     URI_PREFIX_KEY="uriPrefix"
@@ -16,6 +17,8 @@ class DB(object):
     MD5_KEY="md5"
     PORT_KEY="port"
     PORT_LIST_KEY="port_list"
+    MAIN_PAGE_KEY="main_page"
+    GLOBAL_CONF_KEY="global_config"
 
     def __init__(self,conf,log):
         self.conf=conf

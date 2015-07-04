@@ -25,3 +25,6 @@ class TokenMgr(object):
 
     def del_token(self,user):
         self.db.remove(DB.TOKEN_TABLE,{DB.USER_NAME_KEY,user})
+
+    def find_token_from_md5(self,md5):
+        return self.db.find_one(DB.TOKEN_TABLE,{DB.MD5_KEY:md5})[DB.TOKEN_KEY]

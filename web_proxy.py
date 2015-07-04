@@ -5,7 +5,6 @@ gevent.monkey.patch_all()
 
 #from contrail import contrail_veth_port
 from conf import Config
-from nginx_manager import NginxManager
 from rest_server import RestServer
 from log import Logger
 from db import DB
@@ -17,7 +16,6 @@ class WebProxy(object):
         self._prepare()
         self.log=Logger(self.conf)
         self.db=DB(self.conf,self.log)
-        self.nginx_mgr=NginxManager(self.conf,self.log,self.db)
         self.rest_server=RestServer(self.conf,self.nginx_mgr,self.log,self.db)
 
     def _prepare(self):

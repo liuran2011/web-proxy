@@ -4,10 +4,11 @@ from port_mgr import PortMgr
 from db import DB
 
 class NginxManager(object):
-    def __init__(self,conf,log,db):
+    def __init__(self,conf,log,db,global_cfg):
         self.conf=conf
         self.log=log
         self.db=db
+        self.global_cfg=global_cfg
 
         self.port_mgr=PortMgr(self.log,self.conf,self.db)
 
@@ -77,7 +78,11 @@ class NginxManager(object):
                                                   self.conf.log_path+"/"+uri_prefix+'_proxy.log',
                                                   self._nginx_log_level(),
                                                   uri_prefix,
-                                                  proxy_uri)
+                                                  proxy_uri,
+                                                  self.global_cfg.main_page,
+                                                  self.conf.rest_server_address,
+                                                  self.conf.rest_server_port
+                                                  )
             f.write(config)
             f.close()
 

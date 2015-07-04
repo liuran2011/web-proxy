@@ -19,7 +19,16 @@ NGINX_WEB_PROXY_FILE_TEMPLATE="""
         server_name %s;
 
         location / {
+            auth_request /auth;
             proxy_pass %s;
+            error_page 403 =200 %s;
+        }
+
+        location /auth {
+            proxy_pass http://%s:%d;
+            proxy_pass_request_body off;
+            proxy_set_header Content-Length "";
+            proxy_set_header X-Origin-URI $request_uri;
         }
     }
     """
