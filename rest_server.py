@@ -28,7 +28,7 @@ class RestServer(object):
         self.nginx_mgr=NginxManager(self.conf,self.log,self.db,self.global_cfg)
         self.token_mgr=TokenMgr(self.conf,self.log,self.db)
         self.user_mgr=UserMgr(self.conf,self.log,self.db)
-        self.auth=Auth(self.log,self.token_mgr)
+        self.auth=Auth(self.log,self.token_mgr,self.user_mgr)
 
         self.app=Flask(__name__)
         self.app.add_url_rule(self.conf.url_prefix+'/auth',

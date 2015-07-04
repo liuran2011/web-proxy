@@ -74,6 +74,10 @@ class Config:
     def proxy_max_port(self):
         return self.args.proxy_max_port
 
+    @property
+    def auth_url(self):
+        return self.args.auth_url
+
     def _parse_config_file(self,config_file,default_args):
         if (not os.path.exists(config_file) 
             or not os.path.isfile(config_file)):
@@ -96,6 +100,9 @@ class Config:
 
         if parser.has_section('mongo'): 
             default_args.update(dict(parser.items('mongo')))
+        
+        if parser.has_section('auth'):
+            default_args.update(dict(parser.items('auth')))
 
     def _parse_arg(self):
         parser=argparse.ArgumentParser(add_help=False)
@@ -114,7 +121,8 @@ class Config:
             "proxy_min_port":WEB_PROXY_MIN_PORT,
             "proxy_max_port":WEB_PROXY_MAX_PORT,
             "rest_server_address":REST_API_ADDRESS,
-            "mongodb_port":MONGO_DB_PORT
+            "mongodb_port":MONGO_DB_PORT,
+            "auth_url":AUTH_URL
         }
 
         args,remaing_argv=parser.parse_known_args()
@@ -158,5 +166,8 @@ class Config:
         parser.add_argument("--mongodb_address",
                             type=str,
                             help="mongo db listen address")
+        parser.add_argument("--auth_url",
+                            type=str,
+                            help="auth url of keystone")
 
         self.args=parser.parse_args(remaing_argv)

@@ -38,3 +38,5 @@ REST_API_URL_PREFIX='/web_proxy/api/v1.0'
 REST_API_ADDRESS="0.0.0.0"
 
 MONGO_DB_PORT=27017
+
+AUTH_URL="http://localhost:5000/v2.0"
