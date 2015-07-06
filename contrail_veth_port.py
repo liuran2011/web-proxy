@@ -85,27 +85,6 @@ class ContrailVethPort(object):
         return self.vnc_client
         
     def create(self):
-        """Create a vm and vmi, find or create a network, and attach
-        the vmi to a new veth interface
-
-        Arguments:
-
-          vm_name   name of the vm to create
-          net_name  name of the netwok to arrach to
-          subnet    x.x.x.x/len - optional if network already exists
-          netns     Network namespace where the veth interface is bound to.  Defaults to net_name    
-
-        Returns:
-
-          A dict with the following elements:
-          
-          port_id  uuid of port
-          ip
-          veth     name of veth interface
-          netns    Network namespace where the veth interface is bound to
-          
-        """
-        
         # remember what to clean up if things go wrong
         port_created = False
         veth_created = False
@@ -134,15 +113,9 @@ class ContrailVethPort(object):
 
             proj_fq_name = self.args['project'].split(':')
 
-            # find or create the VM
-            #liuran 
-            #vm_fq_name = proj_fq_name + [ self.args['vm_name'] ]
             vm_fq_name = [ self.args['vm_name']]
             print "vm_fq_name",vm_fq_name
             print "project_fq_name",proj_fq_name
-
-            # debug
-            #import pdb; pdb.set_trace()
 
             try:
                 vm = vnc_client.virtual_machine_read(fq_name = vm_fq_name)
