@@ -31,8 +31,11 @@ class NginxManager(object):
            
             file='/'.join([path,entry])
 
-            os.system("sed -i 's/error_page 403 =200.*/error_page 403 =200 "+main_page+";' "+file)
-            
+            cmd="sed -i 's/error_page 403 =200.*/error_page 403 =200 "+main_page.replace('/','\/')+";/' "+file
+            os.system(cmd)
+
+        self._reload()
+
     def _load_proxy_config(self):
         path=self.conf.nginx_config_path+"/conf.d"
         
