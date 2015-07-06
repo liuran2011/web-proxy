@@ -4,6 +4,9 @@ from port_mgr import PortMgr
 from db import DB
 
 class NginxManager(object):
+
+    WEB_PROXY_PREFIX="nfcloud_si_"
+
     def __init__(self,conf,log,db,global_cfg):
         self.conf=conf
         self.log=log
@@ -19,11 +22,22 @@ class NginxManager(object):
         for node in res:
             yield node[DB.URI_PREFIX_KEY]            
 
+    def update_global_config(self,main_page):
+        path=self.conf.nginx_config_path+"/conf.d"
+
+        for entry in os.listdir(path):
+            if not entry.startswith(NginxManager.WEB_PROXY_PREFIX):
+                continue
+           
+            file='/'.join([path,entry])
+
+            os.system("sed -i 's/error_page 403 =200.*/error_page 403 =200 "+main_page+";' "+file)
+            
     def _load_proxy_config(self):
         path=self.conf.nginx_config_path+"/conf.d"
         
         for entry in os.listdir(path):
-            if entry=="default" or entry.startswith("."):
+            if not entry.startswith(NginxManager.WEB_PROXY_PREFIX):
                 continue
             
             os.remove('/'.join([path,entry]))

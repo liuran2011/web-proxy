@@ -12,7 +12,7 @@ class GlobalConfig(object):
         if not cfg_map:
             self.db.insert(DB.GLOBAL_CONFIG_TABLE,cfg)
         else:
-            self.db.update(DB.GLOBAL_CONFIG_TABLE,None,cfg)
+            self.db.update(DB.GLOBAL_CONFIG_TABLE,{},cfg)
 
     @property
     def main_page(self):

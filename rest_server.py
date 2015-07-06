@@ -58,9 +58,11 @@ class RestServer(object):
 
     def _global_config(self):
         self.log.debug("global config request, %s"%(request.json))
+
         self.global_cfg.update(request.json)
-        
-        return jsonify({RestServer.RESULT,"ok"}),HTTP_OK
+        self.nginx_mgr.update_global_config(request.json[RestServer.MAIN_PAGE])
+
+        return jsonify({RestServer.RESULT:"ok"}),HTTP_OK
 
     def _sanity_check_proxy(self,request):
         proxy_del_list=[]

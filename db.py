@@ -17,7 +17,7 @@ class DB(object):
     MD5_KEY="md5"
     PORT_KEY="port"
     PORT_LIST_KEY="port_list"
-    MAIN_PAGE_KEY="main_page"
+    MAIN_PAGE_KEY="mainPage"
     GLOBAL_CONF_KEY="global_config"
 
     def __init__(self,conf,log):

@@ -1,5 +1,6 @@
 from http_codes import *
 import urllib2
+import re
 
 class Auth(object):
     def __init__(self,log,token_mgr,user_mgr):
@@ -23,7 +24,7 @@ class Auth(object):
         
         return HTTP_OK_STR,HTTP_OK
 
-    def auth(http_headers):
+    def auth(self,http_headers):
         if not http_headers:
             return HTTP_INTERNAL_ERROR_STR,HTTP_INTERNAL_ERROR
 
