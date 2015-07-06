@@ -1,86 +1,4 @@
 #! /usr/bin/env python
-"""
-NAME
-
-contrail_veth_port - create a veth interface to a Contrail virtual
-                     network
-
-DESCRIPTION
-
-Usually VMs are connected to virtual network ports.  This creates a
-veth interface on the local host that's connected to a Contrail
-virtual network.  Local programs (like ssh) can connect directly to
-VMs, and VMs can connect to local servers (like mysql).
-
-USAGE
-
-  contrail_veth_port [options] vm_name network_name
-
-  contrail_veth_port --delete vm_name
-
-Or, from python:
-
-  from contrail_veth_port import ContrailVethPort
-  ret = ContrailVethPort(net_name="mynet", vm_name="myvm").create()
-  ret = ContrailVethPort(vm_name="myvm").delete()
-
-OUTPUT
-
-Outputs a set of variables in json, shell, table, or python format
-(see --format):
-
-  port_id
-    UUID of created port, useful for neutron commands like
-    floatingip-associate
-
-  veth
-    name of veth interface created
-  
-  netns
-    network namesace veth is in
-    
-  ip
-    IP address of veth interface
-  hw
-    Ether address of veth interface
-
-  gateway
-    IP address of veth default gateway
-  
-  dns
-    IP address of veth DNS server
-    
-
-EXAMPLES
-
-* create a veth port
-  
-  contrail_veth_port my_instance my_net
-
-* delete the veth port
-
-  contrail_veth_port --delete my_instance
-
-* use the veth to ssh into a VM
-
-  sudo ip netns exec my_net ssh $my_vm_ip
-
-BUGS  
-
-This assumes there's only one subnet on the network.  If there is more
-than one, this will choose the first subnet and set the namespace's
-default route and DNS from the first subnet.
-
---delete doesn't delete the veth interfaces or netns.  We need an
-extension to the vrouter API to retrieve the name of the interface a
-port is bound to.
-  
-AUTHOR
-
-  Noel Burton-Krahn <noel@pistoncloud.com>
-
-"""
-__docformat__ = "restructuredtext en"
 
 import sys
 import re
@@ -88,17 +6,12 @@ import os
 import netaddr
 import argparse
 
-# KLUDGE - should be in PYTHONPATH
-#sys.path.append('/opt/stack/nova/plugins/contrail')
 sys.path.append('/usr/lib/python2.7/dist-packages/contrail_vrouter_api/gen_py')
 sys.path.append('/usr/share/contrail-utils')
 
-# api for talking to contrail system-global API server
 from vnc_api import vnc_api
-
 import cfgm_common.exceptions
 
-# api for talking to local host's contrail vrouter
 import instance_service.ttypes
 from contrail_utils import vrouter_rpc, \
      uuid_from_string, uuid_array_to_str, \
@@ -109,9 +22,6 @@ class ContrailVethPort(object):
     """Create a veth port connected to a Contrail virtual network"""
     
     def __init__(self, *argv, **args):
-        """Set arguments dict.  If args is not a dict, then parse it
-        as an array of strings, or sys.argv if None"""
-
         # set args from kw arguments or parse argv (defaulting to
         # sys.argv)
         if args:
@@ -125,8 +35,7 @@ class ContrailVethPort(object):
 
     @classmethod
     def argparser(cls):
-        """Return an argparse.ArgumentParser for me"""
-        parser = argparse.ArgumentParser(__doc__)
+        parser = argparse.ArgumentParser()
         parser.add_argument(
             "--api-server",
             default=os.environ.get('SERVICE_HOST', '127.0.0.1'),
