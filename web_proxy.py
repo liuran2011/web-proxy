@@ -16,7 +16,7 @@ class WebProxy(object):
         self._prepare()
         self.log=Logger(self.conf)
         self.db=DB(self.conf,self.log)
-        self.rest_server=RestServer(self.conf,self.nginx_mgr,self.log,self.db)
+        self.rest_server=RestServer(self.conf,self.log,self.db)
 
     def _prepare(self):
         if not os.path.exists(self.conf.proxy_config_path):

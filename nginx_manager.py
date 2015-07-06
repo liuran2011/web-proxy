@@ -20,7 +20,7 @@ class NginxManager(object):
             yield node[DB.URI_PREFIX_KEY]            
 
     def _load_proxy_config(self):
-        path=self.conf.nginx_config_path+"/sites-enabled"
+        path=self.conf.nginx_config_path+"/conf.d"
         
         for entry in os.listdir(path):
             if entry=="default" or entry.startswith("."):
@@ -71,7 +71,7 @@ class NginxManager(object):
         return public_url
 
     def _add_proxy_nginx(self,uri_prefix,proxy_uri,port):
-        config_file=self.conf.nginx_config_path+"/sites-enabled/"+uri_prefix
+        config_file=self.conf.nginx_config_path+"/conf.d/"+uri_prefix+".conf"
 
         with open(config_file,"w") as f:
             config=NGINX_WEB_PROXY_FILE_TEMPLATE%(port,
@@ -89,7 +89,7 @@ class NginxManager(object):
         return self._public_url(port)
 
     def _del_proxy_nginx(self,uri_prefix):
-        path=self.conf.nginx_config_path+"/sites-enabled/"+uri_prefix
+        path=self.conf.nginx_config_path+"/conf.d/"+uri_prefix+".conf"
         if os.path.exists(path) and os.path.isfile(path):
             os.remove(path)
       

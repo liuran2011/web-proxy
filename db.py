@@ -8,7 +8,7 @@ class DB(object):
     USER_TABLE="user"
     PROXY_TABLE="proxy"
     PORT_TABLE="port"
-    GLOBAL_CONF_TABLE="global_config"
+    GLOBAL_CONFIG_TABLE="global_config"
 
     USER_NAME_KEY="userName"
     URI_PREFIX_KEY="uriPrefix"

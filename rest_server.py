@@ -18,10 +18,9 @@ class RestServer(object):
     WEB_INFO="webInfo"
     MAIN_PAGE="mainPage"
 
-    def __init__(self,conf,nginx_mgr,log,db):
+    def __init__(self,conf,log,db):
         self.conf=conf
         self.log=log
-        self.nginx_mgr=nginx_mgr
         self.db=db
 
         self.global_cfg=GlobalConfig(self.conf,self.log,self.db)
@@ -34,11 +33,11 @@ class RestServer(object):
         self.app.add_url_rule(self.conf.url_prefix+'/auth',
                               'auth',
                               self._auth,
-                              method=['GET'])
+                              methods=['GET'])
         self.app.add_url_rule(self.conf.url_prefix+'/global-config',
                               'global_config',
                               self._global_config,
-                              method=['POST'])
+                              methods=['POST'])
         self.app.add_url_rule(self.conf.url_prefix+'/token',
                               'add_token',
                               self._add_token,
@@ -53,9 +52,12 @@ class RestServer(object):
                             methods=['DELETE'])
    
     def _auth(self):
+        self.log.debug("auth request, http headers: %s"%(request.headers))
+
         return self.auth.auth(request.headers)
 
     def _global_config(self):
+        self.log.debug("global config request, %s"%(request.json))
         self.global_cfg.update(request.json)
         
         return jsonify({RestServer.RESULT,"ok"}),HTTP_OK
