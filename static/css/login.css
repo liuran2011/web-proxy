@@ -1,0 +1,97 @@
+@charset "utf-8";
+/* CSS Document */
+
+#window_box {
+	width:380px;
+	height:280px;
+	padding:0px;
+	border:1px solid #ccc;
+	font-family:"微软雅黑";
+	-moz-border-radius: 15px;      /* Gecko browsers */
+	-webkit-border-radius: 15px;   /* Webkit browsers */
+	border-radius:15px;            /* W3C syntax */
+	-moz-box-shadow:2px 2px 10px #ccc;
+	-webkit-box-shadow:2px 2px 10px #ccc;
+	box-shadow:2px 2px 10px #ccc;
+	position:absolute;
+	top:50%;
+	left:50%;
+	margin-left:-190px;
+	margin-top:-140px;
+}
+.window_top {
+	width:100%;
+	float:left;
+	color:#666;
+	margin-top:20px;
+	line-height:35px;
+}
+.win_name {
+	width:auto;
+	float:left;
+	font-size:16px;
+	margin-left:30px;
+	font-weight:bold;
+}
+.win_close {
+	width:auto;
+	float:right;
+	margin-right:20px;
+	font-size:26px;
+	line-height:12px;
+}
+.win_close:hover {
+	color:red;
+	cursor:pointer;
+}
+.window_con {
+	width:300px;
+	height:auto;
+	float:left;
+	margin-top:40px;
+	margin-left:50px;
+}
+.win_input {
+	width:300px;
+	height:50px;
+	float:left;
+	line-height:28px;
+}
+.win_input span {
+	width:70px;
+	float:left;
+	color:#666;
+	font-size:14px;
+}
+.win_input input {
+	width:190px;
+	height:28px;
+	line-height:28px;
+	border:1px solid #ccc;
+}
+.window_btn {
+	width:100%;
+	float:left;
+	padding-top:20px;
+}
+.btn_sub01 {
+	width:70px;
+	color:#666;
+	height:32px;
+	float:right;
+	font-size:14px;
+	margin-right:30px;
+	line-height:32px;
+	cursor:pointer;
+	border:1px solid #ccc;
+	text-align:center;
+	-moz-box-shadow:2px 2px 10px #ccc;
+	-webkit-box-shadow:2px 2px 10px #ccc;
+	box-shadow:2px 2px 10px #ccc;
+}
+.btn_sub01:hover {
+	-moz-box-shadow:2px 2px 10px #aaa;
+	-webkit-box-shadow:2px 2px 10px #aaa;
+	box-shadow:2px 2px 10px #aaa;
+	border:1px solid #aaa;
+}

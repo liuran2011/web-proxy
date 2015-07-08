@@ -30,6 +30,10 @@ class RestServer(object):
         self.auth=Auth(self.conf,self.log,self.token_mgr,self.user_mgr)
 
         self.app=Flask(__name__)
+        self.app.add_url_rule(self.conf.url_prefix+'/auth_failed',
+                            'auth_failed',
+                            self._auth_failed,
+                            methods=['GET'])
         self.app.add_url_rule(self.conf.url_prefix+'/auth',
                               'auth',
                               self._auth,
@@ -50,7 +54,10 @@ class RestServer(object):
                             'del_proxy_config',
                             self._del_proxy_config,
                             methods=['DELETE'])
-   
+  
+    def _auth_failed(self):
+        self.log.debug('auth failed. redirect to log page.')
+
     def _auth(self):
         self.log.debug("auth request, http headers: %s"%(request.headers))
         
