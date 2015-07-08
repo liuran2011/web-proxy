@@ -18,10 +18,18 @@ NGINX_WEB_PROXY_FILE_TEMPLATE="""
         error_log %s %s;
         server_name %s;
 
+        root %s;
+
+        location /d6f4f78b-cb93-4af4-ba76-8c6c741ce377.html {
+        }
+
+        location /css/d6f4f78b-cb93-4af4-ba76-8c6c741ce377.css {
+        }
+
         location / {
             auth_request /auth;
             proxy_pass %s;
-            error_page 403 =200 %s;
+            error_page 403 /d6f4f78b-cb93-4af4-ba76-8c6c741ce377.html;
 
             if ($arg_token) {
                 add_header Set-Cookie token=$arg_token;

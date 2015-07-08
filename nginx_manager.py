@@ -22,20 +22,6 @@ class NginxManager(object):
         for node in res:
             yield node[DB.URI_PREFIX_KEY]            
 
-    def update_global_config(self,main_page):
-        path=self.conf.nginx_config_path+"/conf.d"
-
-        for entry in os.listdir(path):
-            if not entry.startswith(NginxManager.WEB_PROXY_PREFIX):
-                continue
-           
-            file='/'.join([path,entry])
-
-            cmd="sed -i 's/error_page 403 =200.*/error_page 403 =200 "+main_page.replace('/','\/')+";/' "+file
-            os.system(cmd)
-
-        self._reload()
-
     def _load_proxy_config(self):
         path=self.conf.nginx_config_path+"/conf.d"
         
@@ -95,8 +81,8 @@ class NginxManager(object):
                                                   self.conf.log_path+"/"+uri_prefix+'_proxy.log',
                                                   self._nginx_log_level(),
                                                   uri_prefix,
+                                                  os.getcwd()+'/static',
                                                   proxy_uri,
-                                                  self.global_cfg.main_page,
                                                   self.conf.rest_server_address,
                                                   self.conf.rest_server_port
                                                   )
