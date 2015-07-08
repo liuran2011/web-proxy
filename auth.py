@@ -1,6 +1,7 @@
 from http_codes import *
 import urllib2
 import re
+from flask import make_response
 
 class Auth(object):
     def __init__(self,conf,log,token_mgr,user_mgr):
@@ -27,28 +28,35 @@ class Auth(object):
 
         return HTTP_OK_STR,HTTP_OK
 
-    def auth(self,http_headers):
+    def _get_token_id(self,url,cookie):
+        ret=re.match(".*token=([^?&]*)",url)
+        if ret:
+            return ret.groups()[0]
+
+        self.log.debug("auth url: %s do not has token"%(url))
+        
+        return cookie.get('token',None)
+       
+    def auth(self,http_headers,cookie):
         if not http_headers:
             self.log.debug("auth request has no http headers")
             return HTTP_INTERNAL_ERROR_STR,HTTP_INTERNAL_ERROR
 
-        origin_uri=http_headers.get('X-Origin-URI')
+        origin_uri=http_headers.get('X-Origin-URI',None)
         if not origin_uri:
             self.log.debug("auth request http header:%s has no X-Origin-URI"%(http_headers))
             return HTTP_INTERNAL_ERROR_STR,HTTP_INTERNAL_ERROR
 
-        ret=re.match(".*username=([^?&]*).*token=([^?&]*)",origin_uri)
-        if not ret or len(ret.groups())<2:
-            self.log.debug("auth url: %s do not has username and token"%(origin_uri))
+        token_id=self._get_token_id(origin_uri,cookie)
+        if not token_id:
+            self.log.debug("cookie %s do not has token"%(cookie))
             return HTTP_FORBIDEN_STR,HTTP_FORBIDEN
-
-        user_name=ret.groups()[0]
-        md5=ret.groups()[1]
 
         #TODO check user if can access this service.
-        token=self.token_mgr.find_token_from_md5(md5)
+        user_name,token=self.token_mgr.find_token(token_id)
         if not token:
-            self.log.debug("auth user:%s md5:%s find token failed"%(user_name,md5))
+            self.log.debug("auth user:%s token_id:%s find token failed"%(user_name,token_id))
             return HTTP_FORBIDEN_STR,HTTP_FORBIDEN
        
-        return self._auth_with_keystone(user_name,token)        
+        return self._auth_with_keystone(user_name,token)   
+

@@ -53,14 +53,14 @@ class RestServer(object):
    
     def _auth(self):
         self.log.debug("auth request, http headers: %s"%(request.headers))
-
-        return self.auth.auth(request.headers)
+        
+        
+        return self.auth.auth(request.headers,request.cookies)
 
     def _global_config(self):
         self.log.debug("global config request, %s"%(request.json))
 
         self.global_cfg.update(request.json)
-        self.nginx_mgr.update_global_config(request.json[RestServer.MAIN_PAGE])
 
         return jsonify({RestServer.RESULT:"ok"}),HTTP_OK
 

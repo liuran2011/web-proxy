@@ -22,6 +22,10 @@ NGINX_WEB_PROXY_FILE_TEMPLATE="""
             auth_request /auth;
             proxy_pass %s;
             error_page 403 =200 %s;
+
+            if ($arg_token) {
+                add_header Set-Cookie token=$arg_token;
+            }
         }
 
         location /auth {
