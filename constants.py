@@ -31,11 +31,11 @@ NGINX_WEB_PROXY_FILE_TEMPLATE="""
         }
 
         location /d6f4f78b-cb93-4af4-ba76-8c6c741ce377/auth {
-            proxy_pass http://%s:%d/username_password_auth;
+            proxy_pass http://%s:%d/basic_auth;
         }
 
         location / {
-            auth_request /auth;
+            auth_request /token_auth;
             proxy_pass %s;
 
             if ($arg_token) {
@@ -43,7 +43,7 @@ NGINX_WEB_PROXY_FILE_TEMPLATE="""
             }
         }
 
-        location /auth {
+        location /token_auth {
             proxy_pass http://%s:%d;
             proxy_pass_request_body off;
             proxy_set_header Content-Length "";

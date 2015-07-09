@@ -30,13 +30,13 @@ class RestServer(object):
         self.auth=Auth(self.conf,self.log,self.token_mgr,self.user_mgr)
 
         self.app=Flask(__name__)
-        self.app.add_url_rule(self.conf.url_prefix+'/username_password_auth',
-                            'username_password_auth',
-                            self._username_password_auth,
+        self.app.add_url_rule(self.conf.url_prefix+'/basic_auth',
+                            'basic_auth',
+                            self._basic_auth,
                             methods=['GET','POST'])
-        self.app.add_url_rule(self.conf.url_prefix+'/auth',
-                              'auth',
-                              self._auth,
+        self.app.add_url_rule(self.conf.url_prefix+'/token_auth',
+                              'token_auth',
+                              self._token_auth,
                               methods=['GET'])
         self.app.add_url_rule(self.conf.url_prefix+'/global-config',
                               'global_config',
@@ -55,7 +55,7 @@ class RestServer(object):
                             self._del_proxy_config,
                             methods=['DELETE'])
   
-    def _username_password_auth(self):
+    def _basic_auth(self):
         if request.method=='GET':
             return HTTP_FORBIDEN_STR,HTTP_FORBIDEN
 
@@ -65,11 +65,11 @@ class RestServer(object):
                             request.form.get('password'),
                             request.headers)
 
-    def _auth(self):
+    def _token_auth(self):
         self.log.debug("auth request, http headers: %s"%(request.headers))
         
         
-        return self.auth.auth(request.headers,request.cookies)
+        return self.auth.token_auth(request.headers,request.cookies)
 
     def _global_config(self):
         self.log.debug("global config request, %s"%(request.json))

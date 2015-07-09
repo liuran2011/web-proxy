@@ -22,7 +22,7 @@ class Auth(object):
         
         return cookie.get('token',None)
        
-    def auth(self,http_headers,cookie):
+    def token_auth(self,http_headers,cookie):
         if not http_headers:
             self.log.debug("auth request has no http headers")
             return HTTP_INTERNAL_ERROR_STR,HTTP_INTERNAL_ERROR
