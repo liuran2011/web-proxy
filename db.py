@@ -1,5 +1,6 @@
 import pymongo
 import sys
+import time
 
 class DB(object):
     DB_NAME="web_proxy"
@@ -37,6 +38,7 @@ class DB(object):
             except pymongo.errors.ConnectionFailure as e:
                 self.log.error("connect to mongo db %s:%d failed. retry..."%(
                     self.conf.mongodb_address,self.conf.mongodb_port))
+                time.sleep(1)
                 continue
             
     def find_one(self,table,key):

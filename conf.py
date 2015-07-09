@@ -21,8 +21,7 @@ class Config:
             print "rest server address %s invalid"%(self.rest_server_address)
             sys.exit(1)
         
-        if (not self.mongodb_address 
-            or self.mongodb_address=="0.0.0.0"):
+        if not self.mongodb_address:
             print "mongodb address %s invalid"%(self.mongodb_address)
             sys.exit(1)
 
@@ -41,10 +40,6 @@ class Config:
     @property
     def proxy_public_address(self):
         return self.args.proxy_public_address
-
-    @property
-    def proxy_config_path(self):
-        return self.args.proxy_config_path
 
     @property
     def url_prefix(self):
@@ -113,7 +108,6 @@ class Config:
         
         default_args={
             "nginx_config_path":NGINX_CONFIG_PATH,
-            "proxy_config_path":NGINX_WEB_PROXY_PATH,
             "url_prefix":REST_API_URL_PREFIX,
             "log_level":WEB_PROXY_DEFAULT_LOG_LEVEL,
             "log_path":WEB_PROXY_DEFAULT_LOG_PATH,
@@ -133,9 +127,6 @@ class Config:
         parser.add_argument("--nginx_config_path",
                            type=str,
                            help="Nginx config directory")
-        parser.add_argument("--proxy_config_path",
-                           type=str,
-                           help="path to store proxy file used by nginx")
         parser.add_argument("--url_prefix",
                            type=str,
                            help="url prefix add to rest server request")

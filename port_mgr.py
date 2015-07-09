@@ -15,8 +15,6 @@ class PortMgr(object):
             self.log.info("port list table not exist, create it.")
             self.port_list={DB.PORT_LIST_KEY:[0 for x in range(self.conf.proxy_min_port,self.conf.proxy_max_port)]}
             self.db.insert(DB.PORT_TABLE,self.port_list)
-           
-        #TODO, check proxy_min_port and proxy_max_port if changed.
 
     def alloc_port(self):
         try:

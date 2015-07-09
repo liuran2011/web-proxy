@@ -5,6 +5,7 @@ from token_mgr import TokenMgr
 from user_mgr import UserMgr
 from global_config import GlobalConfig
 from nginx_manager import NginxManager
+from proxy_mgr import ProxyMgr
 import re
 from auth import Auth
 
@@ -14,9 +15,11 @@ class RestServer(object):
     USER_NAME="userName"
     PUBLIC_URL="publicURL"
     RESULT="result"
+    ERROR="error"
     TOKEN="token"
     WEB_INFO="webInfo"
     MAIN_PAGE="mainPage"
+    URL="url"
 
     def __init__(self,conf,log,db):
         self.conf=conf
@@ -24,10 +27,11 @@ class RestServer(object):
         self.db=db
 
         self.global_cfg=GlobalConfig(self.conf,self.log,self.db)
-        self.nginx_mgr=NginxManager(self.conf,self.log,self.db,self.global_cfg)
+        self.proxy_mgr=ProxyMgr(self.conf,self.log,self.db)
+        self.nginx_mgr=NginxManager(self.conf,self.log,self.db,self.global_cfg,self.proxy_mgr)
         self.token_mgr=TokenMgr(self.conf,self.log,self.db)
         self.user_mgr=UserMgr(self.conf,self.log,self.db)
-        self.auth=Auth(self.conf,self.log,self.token_mgr,self.user_mgr)
+        self.auth=Auth(self.conf,self.log,self.token_mgr,self.user_mgr,self.proxy_mgr)
 
         self.app=Flask(__name__)
         self.app.add_url_rule(self.conf.url_prefix+'/basic_auth',
@@ -59,16 +63,11 @@ class RestServer(object):
         if request.method=='GET':
             return HTTP_FORBIDEN_STR,HTTP_FORBIDEN
 
-        self.log.debug('username and password auth')
-
         return self.auth.basic_auth(request.form.get('username'),
                             request.form.get('password'),
                             request.headers)
 
     def _token_auth(self):
-        self.log.debug("auth request, http headers: %s"%(request.headers))
-        
-        
         return self.auth.token_auth(request.headers,request.cookies)
 
     def _global_config(self):
@@ -85,7 +84,7 @@ class RestServer(object):
         for user in request:
             req_uri_prefix_list+=map(lambda x:x[RestServer.URI_PREFIX],user[RestServer.WEB_INFO])
 
-        for uri_prefix in self.nginx_mgr.proxy_list():
+        for uri_prefix in self.proxy_mgr.list_proxy():
             if not uri_prefix in req_uri_prefix_list:
                 self.log.info("uri_prefix:%s not in add proxy config request. del it."
                              %(uri_prefix))
@@ -114,20 +113,18 @@ class RestServer(object):
                                         req[RestServer.WEB_INFO]))
 
     def _add_proxy_config(self):
-        self.log.debug("add_proxy_config %s"%request.json)
+        self.log.info("add_proxy_config %s"%request.json)
 
-        #request format
-        #[{userName:test,webInfo:[{uriPrefix:xxx,webUrl:yyy}]}]
         if not request.json:
-            return jsonify({"error":HTTP_BAD_REQUEST_STR}),HTTP_BAD_REQUEST
+            return jsonify({RestServer.ERROR:HTTP_BAD_REQUEST_STR}),HTTP_BAD_REQUEST
         
         self._add_proxy_config_user(request.json)
        
-        result=self._add_proxy_config_nginx(request.json)
+        result,http_code=self._add_proxy_config_nginx(request.json)
         
         self._sanity_check(request.json)
 
-        return result
+        return result,http_code
 
     def _add_proxy_config_nginx(self,request):
         result=[]
@@ -146,7 +143,7 @@ class RestServer(object):
                 
                 result.append(copy.deepcopy(item))
 
-        return jsonify({"url":result}),HTTP_OK
+        return jsonify({RestServer.URL:result}),HTTP_OK
 
     def _add_token(self):
         self.log.debug("add_token %s"%request.json)

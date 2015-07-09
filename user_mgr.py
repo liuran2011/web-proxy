@@ -38,3 +38,13 @@ class UserMgr(object):
            
     def del_user(self,user):
         self.db.remove(DB.USER_TABLE,{DB.USER_NAME_KEY:user})
+
+    def user_has_uri_prefix(self,user,uri_prefix):
+        user_map=self.db.find_one(DB.USER_TABLE,{DB.USER_NAME_KEY:user})
+        if not user_map:
+            return False
+
+        if uri_prefix not in user_map[DB.URI_PREFIX_KEY]:
+            return False
+
+        return True 

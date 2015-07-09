@@ -52,6 +52,6 @@ class KeyStone(object):
             return None
 
         res=json.loads(response_data)
-        self.log.info("keystone response %s"%(res))
+        self.log.debug("keystone response %s"%(res))
 
         return res['access']['token']['id'];
