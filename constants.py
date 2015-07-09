@@ -20,16 +20,23 @@ NGINX_WEB_PROXY_FILE_TEMPLATE="""
 
         root %s;
 
+        error_page 403 /d6f4f78b-cb93-4af4-ba76-8c6c741ce377.html;
+
+        proxy_intercept_errors on;
+
         location /d6f4f78b-cb93-4af4-ba76-8c6c741ce377.html {
         }
 
         location /css/d6f4f78b-cb93-4af4-ba76-8c6c741ce377.css {
         }
 
+        location /d6f4f78b-cb93-4af4-ba76-8c6c741ce377/auth {
+            proxy_pass http://%s:%d/username_password_auth;
+        }
+
         location / {
             auth_request /auth;
             proxy_pass %s;
-            error_page 403 /d6f4f78b-cb93-4af4-ba76-8c6c741ce377.html;
 
             if ($arg_token) {
                 add_header Set-Cookie token=$arg_token;

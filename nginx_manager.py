@@ -82,6 +82,8 @@ class NginxManager(object):
                                                   self._nginx_log_level(),
                                                   uri_prefix,
                                                   os.getcwd()+'/static',
+                                                  self.conf.rest_server_address,
+                                                  self.conf.rest_server_port,
                                                   proxy_uri,
                                                   self.conf.rest_server_address,
                                                   self.conf.rest_server_port

@@ -1,7 +1,7 @@
 from http_codes import *
-import urllib2
 import re
-from flask import make_response
+from keystone import KeyStone
+from flask import redirect,url_for,abort
 
 class Auth(object):
     def __init__(self,conf,log,token_mgr,user_mgr):
@@ -9,24 +9,7 @@ class Auth(object):
         self.token_mgr=token_mgr
         self.user_mgr=user_mgr
         self.conf=conf
-
-    def _auth_with_keystone(self,user_name,token):
-        headers={"Content-Type":"application/json","X-Auth-Token":token}
-        url=self.conf.auth_url+"/tokens/"+token
-        request=urllib2.Request(url,None,headers)
-
-        try:
-            res=urllib2.urlopen(request)
-        except urllib2.HTTPError as e:
-            self.log.error("request keystone %s failed, error %d"%(url,e.getcode()))
-            return HTTP_FORBIDEN_STR,HTTP_FORBIDEN
-        except urllib2.URLError as e:
-            self.log.error("request url %s failed. exception %s"%(url,e))
-            return HTTP_FORBIDEN_STR,HTTP_FORBIDEN
-
-        self.log.debug("user:%s auth with keystone ok."%(user_name))
-
-        return HTTP_OK_STR,HTTP_OK
+        self.keystone=KeyStone(self.conf,self.log)
 
     def _get_token_id(self,url,cookie):
         ret=re.match(".*token=([^?&]*)",url)
@@ -58,5 +41,23 @@ class Auth(object):
             self.log.debug("auth user:%s token_id:%s find token failed"%(user_name,token_id))
             return HTTP_FORBIDEN_STR,HTTP_FORBIDEN
        
-        return self._auth_with_keystone(user_name,token)   
+        return self.keystone.verify_token(user_name,token)   
+
+    def _redirect_url(self,url):
+        return redirect(url_for(url))
+
+    def basic_auth(self,username,password,headers):
+        token=self.keystone.get_token(username,password)
+        if not token:
+            self.log.error("get token from keystone failed.")
+            return HTTP_FORBIDEN_STR,HTTP_FORBIDEN
+
+        self.token_mgr.add_token(username,token)
+
+        referer=headers.get('Referer',None)
+        if not referer:
+            self.log.error("http header %s do not have referer"%(headers))
+            return HTTP_FORBIDEN_STR,HTTP_FORBIDEN
+
+        return redirect(url_for('/?token='+token))
 
