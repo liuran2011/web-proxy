@@ -4,6 +4,7 @@ from keystone import KeyStone
 from flask import redirect,url_for,abort
 import urlparse
 from utils import MD5
+from constants import *
 
 class Auth(object):
     def __init__(self,conf,log,token_mgr,user_mgr):
@@ -46,6 +47,13 @@ class Auth(object):
         return self.keystone.verify_token(user_name,token)   
 
     def basic_auth(self,username,password,headers):
+        referer=headers.get('Referer',None)
+        if not referer:
+            self.log.error("http header %s do not have referer"%(headers))
+            return HTTP_FORBIDEN_STR,HTTP_FORBIDEN
+
+        url_comps=urlparse.urlparse(referer)
+ 
         token=self.keystone.get_token(username,password)
         if not token:
             self.log.error("get token from keystone failed.")
@@ -55,13 +63,5 @@ class Auth(object):
 
         self.token_mgr.add_token(username,token)
 
-        referer=headers.get('Referer',None)
-        if not referer:
-            self.log.error("http header %s do not have referer"%(headers))
-            return HTTP_FORBIDEN_STR,HTTP_FORBIDEN
-
-        url_comps=urlparse.urlparse(referer)
-        url=url_comps.scheme+"://"+url_comps.netloc+"/?token="+MD5.get(token)
-
-        return redirect(url)
+        return redirect(url_comps.scheme+"://"+url_comps.netloc+"/?token="+MD5.get(token))
 

@@ -16,7 +16,6 @@ NGINX_WEB_PROXY_FILE_TEMPLATE="""
     server {
         listen %d;
         error_log %s %s;
-        server_name %s;
 
         root %s;
 
@@ -48,7 +47,6 @@ NGINX_WEB_PROXY_FILE_TEMPLATE="""
             proxy_pass_request_body off;
             proxy_set_header Content-Length "";
             proxy_set_header X-Origin-URI $request_uri;
-            proxy_set_header X-Origin-Host $host;
         }
     }
     """
@@ -60,3 +58,5 @@ REST_API_ADDRESS="0.0.0.0"
 MONGO_DB_PORT=27017
 
 AUTH_URL="http://localhost:5000/v2.0"
+
+FORBIDEN_PAGE_UUID="d6f4f78b-cb93-4af4-ba76-8c6c741ce377"

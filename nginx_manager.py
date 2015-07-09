@@ -80,7 +80,6 @@ class NginxManager(object):
             config=NGINX_WEB_PROXY_FILE_TEMPLATE%(port,
                                                   self.conf.log_path+"/"+uri_prefix+'_proxy.log',
                                                   self._nginx_log_level(),
-                                                  uri_prefix,
                                                   os.getcwd()+'/static',
                                                   self.conf.rest_server_address,
                                                   self.conf.rest_server_port,
@@ -109,7 +108,7 @@ class NginxManager(object):
 
         proxy_map=self.db.find_one(DB.PROXY_TABLE,{DB.URI_PREFIX_KEY:uri_prefix})
         if proxy_map:
-            self.port_mgr.free_port(proxy_map[DB.PORT_KEY])
+            self.port_mgr.free_port(int(proxy_map[DB.PORT_KEY]))
         
         self.db.remove(DB.PROXY_TABLE,{DB.URI_PREFIX_KEY:uri_prefix})
 
