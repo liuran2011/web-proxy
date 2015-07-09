@@ -18,7 +18,7 @@ class ProxyMgr(object):
         if not proxy_map:
             return None
 
-        return proxy_map[DB.URI_PREFIX]
+        return proxy_map[DB.URI_PREFIX_KEY]
 
     def add_proxy(self,uri_prefix,web_url,port):
         self.db.insert(DB.PROXY_TABLE,

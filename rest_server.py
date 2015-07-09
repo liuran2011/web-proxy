@@ -84,7 +84,7 @@ class RestServer(object):
         for user in request:
             req_uri_prefix_list+=map(lambda x:x[RestServer.URI_PREFIX],user[RestServer.WEB_INFO])
 
-        for uri_prefix in self.proxy_mgr.list_proxy():
+        for uri_prefix,web_url,port in self.proxy_mgr.list_proxy():
             if not uri_prefix in req_uri_prefix_list:
                 self.log.info("uri_prefix:%s not in add proxy config request. del it."
                              %(uri_prefix))
@@ -115,9 +115,9 @@ class RestServer(object):
     def _add_proxy_config(self):
         self.log.info("add_proxy_config %s"%request.json)
 
-        if not request.json:
+        if not request.json or not isinstance(request.json,list):
             return jsonify({RestServer.ERROR:HTTP_BAD_REQUEST_STR}),HTTP_BAD_REQUEST
-        
+       
         self._add_proxy_config_user(request.json)
        
         result,http_code=self._add_proxy_config_nginx(request.json)
