@@ -48,6 +48,7 @@ NGINX_WEB_PROXY_FILE_TEMPLATE="""
             proxy_pass_request_body off;
             proxy_set_header Content-Length "";
             proxy_set_header X-Origin-URI $request_uri;
+            proxy_set_header X-Origin-Host $host;
         }
     }
     """

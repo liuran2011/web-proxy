@@ -2,6 +2,8 @@ from http_codes import *
 import re
 from keystone import KeyStone
 from flask import redirect,url_for,abort
+import urlparse
+from utils import MD5
 
 class Auth(object):
     def __init__(self,conf,log,token_mgr,user_mgr):
@@ -16,7 +18,7 @@ class Auth(object):
         if ret:
             return ret.groups()[0]
 
-        self.log.debug("auth url: %s do not has token"%(url))
+        self.log.debug("auth url: %s do not has token. get from cookie."%(url))
         
         return cookie.get('token',None)
        
@@ -38,19 +40,18 @@ class Auth(object):
         #TODO check user if can access this service.
         user_name,token=self.token_mgr.find_token(token_id)
         if not token:
-            self.log.debug("auth user:%s token_id:%s find token failed"%(user_name,token_id))
+            self.log.debug("auth token_id:%s find token failed"%(token_id))
             return HTTP_FORBIDEN_STR,HTTP_FORBIDEN
        
         return self.keystone.verify_token(user_name,token)   
-
-    def _redirect_url(self,url):
-        return redirect(url_for(url))
 
     def basic_auth(self,username,password,headers):
         token=self.keystone.get_token(username,password)
         if not token:
             self.log.error("get token from keystone failed.")
             return HTTP_FORBIDEN_STR,HTTP_FORBIDEN
+
+        self.log.info("get token from keystone success.")
 
         self.token_mgr.add_token(username,token)
 
@@ -59,5 +60,8 @@ class Auth(object):
             self.log.error("http header %s do not have referer"%(headers))
             return HTTP_FORBIDEN_STR,HTTP_FORBIDEN
 
-        return redirect(url_for('/?token='+token))
+        url_comps=urlparse.urlparse(referer)
+        url=url_comps.scheme+"://"+url_comps.netloc+"/?token="+MD5.get(token)
+
+        return redirect(url)
 

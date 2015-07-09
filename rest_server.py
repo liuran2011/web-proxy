@@ -56,10 +56,10 @@ class RestServer(object):
                             methods=['DELETE'])
   
     def _username_password_auth(self):
-        self.log.debug('username and password auth')
-        
         if request.method=='GET':
             return HTTP_FORBIDEN_STR,HTTP_FORBIDEN
+
+        self.log.debug('username and password auth')
 
         return self.auth.basic_auth(request.form.get('username'),
                             request.form.get('password'),
