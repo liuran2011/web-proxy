@@ -1,7 +1,6 @@
 import os
 from constants import *
 from port_mgr import PortMgr
-from db import DB
 
 class NginxManager(object):
 

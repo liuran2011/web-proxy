@@ -2,7 +2,6 @@ import argparse
 import os
 import ConfigParser
 import copy
-import socket
 import sys
 
 from constants import *

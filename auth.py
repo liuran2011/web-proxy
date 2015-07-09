@@ -1,7 +1,7 @@
 from http_codes import *
 import re
 from keystone import KeyStone
-from flask import redirect,url_for,abort
+from flask import redirect
 import urlparse
 from utils import MD5
 from constants import *

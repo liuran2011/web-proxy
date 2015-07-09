@@ -160,7 +160,7 @@ class RestServer(object):
         
         self.nginx_mgr.del_proxy(uri_prefix)
         self.user_mgr.del_user_uri_prefix(uri_prefix)
-
+        
         return jsonify({RestServer.RESULT:'ok'}),HTTP_OK
 
     def run_server(self):
