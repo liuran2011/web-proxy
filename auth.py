@@ -96,3 +96,5 @@ class Auth(object):
 
         return redirect(url)
 
+    def get_token(self,username,password):
+        return self.keystone.get_token(username,password)

@@ -21,6 +21,13 @@ class TokenMgr(object):
     def del_token(self,user):
         self.db.remove(DB.TOKEN_TABLE,{DB.USER_NAME_KEY:user})
 
+    def find_token_id(self,username):
+        token_map=self.db.find_one(DB.TOKEN_TABLE,{DB.USER_NAME_KEY:username})
+        if not token_map:
+            return None
+
+        return token_map.get(DB.MD5_KEY)
+
     def find_token(self,md5):
         token_map=self.db.find_one(DB.TOKEN_TABLE,{DB.MD5_KEY:md5})
         if not token_map:

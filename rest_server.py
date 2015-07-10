@@ -8,6 +8,7 @@ from nginx_manager import NginxManager
 from proxy_mgr import ProxyMgr
 import re
 from auth import Auth
+from utils import MD5
 
 class RestServer(object):
     URI_PREFIX="uriPrefix"
@@ -20,6 +21,7 @@ class RestServer(object):
     WEB_INFO="webInfo"
     MAIN_PAGE="mainPage"
     URL="url"
+    PASSWORD="password"
 
     def __init__(self,conf,log,db):
         self.conf=conf
@@ -162,14 +164,22 @@ class RestServer(object):
         return jsonify({RestServer.URL:result}),HTTP_OK
 
     def _add_token(self):
-        self.log.debug("add_token %s"%request.json)
-
         if not request.json:
             return jsonify({"error":HTTP_BAD_REQUEST_STR}),HTTP_BAD_REQUEST
 
-        self.token_mgr.add_token(request.json[RestServer.USER_NAME],request.json[RestServer.TOKEN]) 
-        
-        return jsonify({RestServer.RESULT:"ok"}),HTTP_OK
+        username=request.json[RestServer.USER_NAME]
+        token_id=self.token_mgr.find_token_id(username)
+        if not token_id:
+            self.log.info("username %s find token failed, request keystone"%(username))
+            token=self.auth.get_token(username,request.json[RestServer.PASSWORD])
+            if not token:
+                self.log.error("request token from keystone failed.")
+                return jsonify({RestServer.RESULT:HTTP_UNAUTHORIZED_STR}),HTTP_UNAUTHORIZED 
+            
+            self.token_mgr.add_token(username,token)
+            token_id=MD5.get(token)
+
+        return jsonify({RestServer.TOKEN:token_id}),HTTP_OK
 
     def _del_proxy_config(self,uri_prefix):
         self.log.debug("del_proxy_config uri_prefix %s"%uri_prefix)
