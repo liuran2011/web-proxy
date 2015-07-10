@@ -85,7 +85,7 @@ class Auth(object):
         self.token_mgr.add_token(username,token)
 
         url_comps=urlparse.urlparse(referer)
-        url=url_comps.scheme+"://"+url_comps.netloc+"/?token="+MD5.get(token)
+        url=url_comps.scheme+"://"+url_comps.netloc+"/?username="+username+"&token="+MD5.get(token)
         self.log.info("redirect to :%s"%url)
 
         return redirect(url)

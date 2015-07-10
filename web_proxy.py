@@ -24,6 +24,9 @@ class WebProxy(object):
     def main(self):
         self.rest_server.run_server()
 
-if __name__=="__main__":
+def web_proxy_main():
     server=WebProxy()
-    server.main()    
+    server.main()
+
+if __name__=="__main__":
+    web_proxy_main()
