@@ -52,7 +52,6 @@ class NginxManager(object):
         port,web_url=self.proxy_mgr.find_proxy(uri_prefix)
         if port:
             if proxy_uri==web_url:
-                print web_url
                 return self._public_url(port,URL.get_path(web_url));
             else:
                 self.log.info("uri_prefix %s web_url change from %s to %s"
@@ -69,8 +68,6 @@ class NginxManager(object):
         self._add_proxy_nginx(uri_prefix,proxy_uri,port)
 
         self._reload()
-       
-        print proxy_uri
 
         return self._public_url(port,URL.get_path(proxy_uri))
 
