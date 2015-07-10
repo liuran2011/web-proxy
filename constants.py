@@ -28,6 +28,8 @@ NGINX_WEB_PROXY_FILE_TEMPLATE="""
 
         location /d6f4f78b-cb93-4af4-ba76-8c6c741ce377/auth {
             proxy_pass http://%s:%d/basic_auth;
+            proxy_set_header X-Origin-Host $host;
+            proxy_set_header X-Origin-Port $server_port;
         }
 
         location / {
@@ -35,7 +37,7 @@ NGINX_WEB_PROXY_FILE_TEMPLATE="""
             proxy_pass %s;
 
             if ($arg_token) {
-                add_header Set-Cookie token=$arg_token;
+                add_header Set-Cookie "token=$arg_token;path=/";
             }
         }
 

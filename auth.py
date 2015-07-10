@@ -69,12 +69,18 @@ class Auth(object):
         if not len(username) or not len(password):
             self.log.error("username or password is empty")
             return HTTP_FORBIDEN_STR,HTTP_FORBIDEN
+        
+        host=headers.get('X-Origin-Host',None)
+        port=headers.get('X-Origin-Port',None)
+        if not host or not port:
+            self.log.error("X-Origin-Host or X-Origin-Port not in headers:%s"%(headers))
+            return HTTP_INTERNAL_ERROR_STR,HTTP_INTERNAL_ERROR
 
-        referer=headers.get('Referer',None)
-        if not referer:
-            self.log.error("http header %s do not have referer"%(headers))
+        web_url=self.proxy_mgr.find_web_url(int(port))
+        if not web_url:
+            self.log.error("find web_url from port:%s failed"%(port))
             return HTTP_FORBIDEN_STR,HTTP_FORBIDEN
- 
+
         token=self.keystone.get_token(username,password)
         if not token:
             self.log.error("get token from keystone failed.")
@@ -84,8 +90,8 @@ class Auth(object):
 
         self.token_mgr.add_token(username,token)
 
-        url_comps=urlparse.urlparse(referer)
-        url=url_comps.scheme+"://"+url_comps.netloc+"/?username="+username+"&token="+MD5.get(token)
+        url_comps=urlparse.urlparse(web_url)
+        url="http://"+host+":"+port+url_comps.path+"?username="+username+"&token="+MD5.get(token)
         self.log.info("redirect to :%s"%url)
 
         return redirect(url)

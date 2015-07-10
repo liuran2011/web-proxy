@@ -1,6 +1,7 @@
 import os
 from constants import *
 from port_mgr import PortMgr
+from utils import URL
 
 class NginxManager(object):
 
@@ -42,13 +43,21 @@ class NginxManager(object):
                 'critical':'crit'}
         return levels.get(self.conf.log_level,'notice')
 
-    def _public_url(self,port):
-        return "http://"+self.conf.proxy_public_address+":"+str(port)
+    def _public_url(self,port,path):
+        url="http://"+self.conf.proxy_public_address+":"+str(port)+path
+
+        return url
 
     def add_proxy(self,uri_prefix,proxy_uri):
         port,web_url=self.proxy_mgr.find_proxy(uri_prefix)
         if port:
-            return self._public_url(port);
+            if proxy_uri==web_url:
+                print web_url
+                return self._public_url(port,URL.get_path(web_url));
+            else:
+                self.log.info("uri_prefix %s web_url change from %s to %s"
+                              %(uri_prefix,web_url,proxy_uri))
+                self.del_proxy(uri_prefix)
 
         port=self.port_mgr.alloc_port()
         if not port:
@@ -60,8 +69,10 @@ class NginxManager(object):
         self._add_proxy_nginx(uri_prefix,proxy_uri,port)
 
         self._reload()
-        
-        return self._public_url(port)
+       
+        print proxy_uri
+
+        return self._public_url(port,URL.get_path(proxy_uri))
 
     def _add_proxy_nginx(self,uri_prefix,proxy_uri,port):
         self.log.info("nginx add proxy uri_prefix:%s port:%d"%(uri_prefix,port))
@@ -75,7 +86,7 @@ class NginxManager(object):
                                                   os.getcwd()+'/static',
                                                   self.conf.rest_server_address,
                                                   self.conf.rest_server_port,
-                                                  proxy_uri,
+                                                  URL.get_base(proxy_uri),
                                                   self.conf.rest_server_address,
                                                   self.conf.rest_server_port
                                                   )

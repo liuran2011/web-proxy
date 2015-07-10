@@ -50,6 +50,10 @@ class RestServer(object):
                               'add_token',
                               self._add_token,
                               methods=['POST'])
+        self.app.add_url_rule(self.conf.url_prefix+'/sync',
+                              "sync",
+                              self._sync,
+                              methods=['POST'])
         self.app.add_url_rule(self.conf.url_prefix+'/',
                              'add_proxy_config',
                              self._add_proxy_config,
@@ -58,7 +62,19 @@ class RestServer(object):
                             'del_proxy_config',
                             self._del_proxy_config,
                             methods=['DELETE'])
-  
+ 
+    def _add_proxy_config(self):
+        self.log.info("add_proxy_config %s"%request.json)
+
+        if not request.json or not isinstance(request.json,list):
+            return jsonify({RestServer.ERROR:HTTP_BAD_REQUEST_STR}),HTTP_BAD_REQUEST
+       
+        self._add_proxy_config_user(request.json)
+       
+        result,http_code=self._add_proxy_config_nginx(request.json)
+
+        return result,http_code
+
     def _basic_auth(self):
         if request.method=='GET':
             return HTTP_FORBIDEN_STR,HTTP_FORBIDEN
@@ -112,8 +128,8 @@ class RestServer(object):
                                   map(lambda arg: arg[RestServer.URI_PREFIX],
                                         req[RestServer.WEB_INFO]))
 
-    def _add_proxy_config(self):
-        self.log.info("add_proxy_config %s"%request.json)
+    def _sync(self):
+        self.log.info("sync_proxy_config %s"%request.json)
 
         if not request.json or not isinstance(request.json,list):
             return jsonify({RestServer.ERROR:HTTP_BAD_REQUEST_STR}),HTTP_BAD_REQUEST

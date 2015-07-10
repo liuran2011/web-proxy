@@ -20,6 +20,13 @@ class ProxyMgr(object):
 
         return proxy_map[DB.URI_PREFIX_KEY]
 
+    def find_web_url(self,port):
+        proxy_map=self.db.find_one(DB.PROXY_TABLE,{DB.PORT_KEY:port})
+        if not proxy_map:
+            return None
+
+        return proxy_map[DB.WEB_URL_KEY]
+
     def add_proxy(self,uri_prefix,web_url,port):
         self.db.insert(DB.PROXY_TABLE,
                         {
