@@ -1,10 +1,10 @@
 #! /usr/bin/env python
 
 import sys
-import re
 import os
 import netaddr
 import argparse
+from constants import *
 
 sys.path.append('/usr/lib/python2.7/dist-packages/contrail_vrouter_api/gen_py')
 sys.path.append('/usr/share/contrail-utils')
@@ -19,40 +19,56 @@ from contrail_utils import vrouter_rpc, \
      format_dict
 
 class ContrailVethPort(object):
-    """Create a veth port connected to a Contrail virtual network"""
-    
     def __init__(self, *argv, **args):
-        # set args from kw arguments or parse argv (defaulting to
-        # sys.argv)
-        if args:
-            self.args = args
-        else:
-            if not argv:
-                argv = None
-            self.args = vars(self.argparser().parse_args(argv))
+        self._parse_args()
             
         self.vnc_client = None
 
-    @classmethod
-    def argparser(cls):
-        parser = argparse.ArgumentParser()
+    def _parse_config_file(self,file,args):
+        if (not os.path.exists(file)
+            or not os.path.isfile(file)):
+            return
+        
+        parser=ConfigParser.ConfigParser()
+        parser.read(file)
+        
+        if parser.has_section('auth'):
+            args.update(dict(parser.items('auth')))
+        
+        if parser.has_section('contrail'):
+            args.update(dict(parser.items('contrail')))
+ 
+    def _parse_args(self):
+        parser = argparse.ArgumentParser(add_help=False)
+        parser.add_argument(
+            "--config-file",
+            default=WEB_PROXY_CONFIG_FILE,
+            help=("configure file.  Default:"+WEB_PROXY_CONFIG_FILE))  
+        
+        default_args={
+            "api_server":CONTRAIL_API_SERVER,
+            "api_port":CONTRAIL_API_PORT,
+            "project":CONTRAIL_PROJECT,
+            "netns":CONTRAIL_NETNS,
+            "auth_url":AUTH_URL,
+            "vm_name":CONTRAIL_VM_NAME,
+            "net_name":CONTRAIL_NET_NAME
+        }
+
+        args,remain_argv=parser.parse_known_args()
+        if args.config_file:
+            self.parse_config_file(args.config_file,default_args)
+
+        parser.set_defaults(**default_args)
         parser.add_argument(
             "--api-server",
-            default=os.environ.get('SERVICE_HOST', '127.0.0.1'),
-            help=("API server address."
-                  + "  Default: SERVICE_HOST from env or 127.0.0.1"))
+            help="API server address. Default:"+CONTRAIL_API_SERVER)
         parser.add_argument(
             "--api-port",
-            default=os.environ.get('CONTRAIL_API_PORT', '8082'),
-            help=("API server port."
-                  + "  Default: CONTRAIL_API_PORT from env or 8082"))
+            help="API server port. Default:%d"%CONTRAIL_API_PORT)
         parser.add_argument(
             "--project",
-            default=os.environ.get('CONTRAIL_PROJECT',
-                                   'default-domain:default-project'),
-            help=("OpenStack project name."
-                  + "  Default: CONTRAIL_PROJECT"
-                  + " or default-domain:default-project"))
+            help="OpenStack project name. Default:"+CONTRAIL_PROJECT)
         parser.add_argument(
             "--delete", action="store_true",
             help="Delete the virtual machine and network")
@@ -61,9 +77,8 @@ class ContrailVethPort(object):
             default="table",
             help="Format of output values: table, shell, json, python")
         parser.add_argument(
-            "--subnet",
-            help=("IP subnet address for the virtual-network"
-                  + ", if the network doesn't already exist"))
+            "--auth_url",
+            help="openstack auth url")  
         parser.add_argument(
             "--netns",
             help=("Name of the network namespace to put the veth interface in."
@@ -71,17 +86,18 @@ class ContrailVethPort(object):
         parser.add_argument(
             "vm_name", help="Name of virtual machine to create to own the port")
         parser.add_argument(
-            "net_name", default=None,
+            "net_name", 
             help=("Name of virtual network to attach veth interface to."
                   + "  Will be created if it doesn't already exist"))
-        return parser
+        
+        self.args=parser.parse_args(remaing_argv)
 
     def vnc_connect(self):
-        """open a connection to the Contrail API server"""
         if not self.vnc_client:
             self.vnc_client = vnc_api.VncApi(
                 api_server_host=self.args['api_server'],
-                api_server_port=self.args['api_port'])
+                api_server_port=self.args['api_port'],
+                auth_url=self.args['auth_url'])
         return self.vnc_client
         
     def create(self):
@@ -95,70 +111,26 @@ class ContrailVethPort(object):
         vm_created = False
 
         try:
-            # sanity check
-            net_name = self.args.get('net_name')
-            if not net_name:
-                raise ValueError("Network name argument is required")
-
-            # sanitize netns since it gets passed to the shell
-            netns = self.args.get('netns')
-            if not netns:
-                netns = net_name
-            if not re.match(r'^[-.\w]+$', netns):
-                raise ValueError("netns=[%s] must be a valid namespace name"
-                                 + " (a single word)" % netns)
-
-            
             vnc_client = self.vnc_connect()
 
             proj_fq_name = self.args['project'].split(':')
 
             vm_fq_name = [ self.args['vm_name']]
-            print "vm_fq_name",vm_fq_name
-            print "project_fq_name",proj_fq_name
 
             try:
                 vm = vnc_client.virtual_machine_read(fq_name = vm_fq_name)
-                if vm:
-                    #raise ValueError(("Virtual machine named %s already exists."
-                    #                  + "  Use --delete to delete it")
-                    #                 % self.args['vm_name'])
-                    pass
             except cfgm_common.exceptions.NoIdError:
                 # create vm if necessary
-                #liuran
-                #vm = vnc_api.VirtualMachine(':'.join(vm_fq_name),
                 vm = vnc_api.VirtualMachine(self.args['vm_name'],
                                             fq_name=vm_fq_name)
-                #vm = vnc_api.VirtualMachine(self.args['vm_name'],
-                #vm = vnc_api.VirtualMachine(fq_name=vm_fq_name)
                 vnc_client.virtual_machine_create(vm)
                 vm = vnc_client.virtual_machine_read(fq_name = vm_fq_name)
                 vm_created = True
     
-            # find or create the network
+            # find the network
             vnet_fq_name = proj_fq_name + [ net_name ]
             vnet_created = False
-            try:
-                vnet = vnc_client.virtual_network_read(fq_name = vnet_fq_name)
-            except cfgm_common.exceptions.NoIdError:
-                # create the network if it doesn't exist
-                vnet = vnc_api.VirtualNetwork(vnet_fq_name[-1],
-                                              parent_type = 'project',
-                                              fq_name = vnet_fq_name)
-
-                # add a subnet
-                ipam = vnc_client.network_ipam_read(
-                    fq_name = ['default-domain',
-                               'default-project',
-                               'default-network-ipam'])
-                (prefix, plen) = self.args['subnet'].split('/')
-                subnet = vnc_api.IpamSubnetType(
-                    subnet = vnc_api.SubnetType(prefix, int(plen)))
-                vnet.add_network_ipam(ipam, vnc_api.VnSubnetsType([subnet]))
-
-                vnc_client.virtual_network_create(vnet)
-                vnet_created = True
+            vnet = vnc_client.virtual_network_read(fq_name = vnet_fq_name)
 
             # find or create the vmi
             vmi_fq_name = vm.fq_name + ['0']
