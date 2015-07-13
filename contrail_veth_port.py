@@ -5,6 +5,7 @@ import os
 import netaddr
 import argparse
 from constants import *
+import ConfigParser
 
 sys.path.append('/usr/lib/python2.7/dist-packages/contrail_vrouter_api/gen_py')
 sys.path.append('/usr/share/contrail-utils')
@@ -57,7 +58,7 @@ class ContrailVethPort(object):
 
         args,remain_argv=parser.parse_known_args()
         if args.config_file:
-            self.parse_config_file(args.config_file,default_args)
+            self._parse_config_file(args.config_file,default_args)
 
         parser.set_defaults(**default_args)
         parser.add_argument(
@@ -84,13 +85,13 @@ class ContrailVethPort(object):
             help=("Name of the network namespace to put the veth interface in."
                   + "   Default: virtual network name"))
         parser.add_argument(
-            "vm_name", help="Name of virtual machine to create to own the port")
+            "--vm_name", help="Name of virtual machine to create to own the port")
         parser.add_argument(
-            "net_name", 
+            "--net_name", 
             help=("Name of virtual network to attach veth interface to."
                   + "  Will be created if it doesn't already exist"))
         
-        self.args=parser.parse_args(remaing_argv)
+        self.args=vars(parser.parse_args(remain_argv))
 
     def vnc_connect(self):
         if not self.vnc_client:
@@ -128,7 +129,7 @@ class ContrailVethPort(object):
                 vm_created = True
     
             # find the network
-            vnet_fq_name = proj_fq_name + [ net_name ]
+            vnet_fq_name = proj_fq_name + [ self.args['net_name'] ]
             vnet_created = False
             vnet = vnc_client.virtual_network_read(fq_name = vnet_fq_name)
 
@@ -179,6 +180,7 @@ class ContrailVethPort(object):
 
             # find a name that's not already used in the default or
             # netns namespaces
+            netns=self.args['netns']
             link_exists = link_exists_func('', netns)
             veth_vrouter = new_interface_name(suffix=vnet.uuid, prefix="ve1",
                                               exists_func=link_exists)
@@ -265,8 +267,8 @@ class ContrailVethPort(object):
         """Delete a vm and its vmi."""
         vnc_client = self.vnc_connect()
         
-        proj_fq_name = self.args.get('project').split(':')
-        vm_fq_name = proj_fq_name + [ self.args.get('vm_name') ]
+        proj_fq_name = self.args['project'].split(':')
+        vm_fq_name = proj_fq_name + [ self.args['vm_name'] ]
         try:
             # delete all dependent VMIs and IPs then delete the VM
             vm = vnc_client.virtual_machine_read(fq_name = vm_fq_name)
@@ -292,12 +294,13 @@ class ContrailVethPort(object):
     
     def main(self):
         """run from command line"""
-        if self.args.get('delete'):
+        if self.args['delete']:
             self.delete()
         else:
             ret = self.create()
-            print format_dict(ret, self.args.get('format'))
+            print format_dict(ret, self.args['format'])
 
 if __name__ == '__main__':
-    ContrailVethPort().main()
+    c=ContrailVethPort()
+    c.main()
 

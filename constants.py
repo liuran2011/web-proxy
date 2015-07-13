@@ -62,6 +62,6 @@ AUTH_URL="http://127.0.0.1:5000/v2.0"
 CONTRAIL_API_SERVER="127.0.0.1"
 CONTRAIL_API_PORT=8082
 CONTRAIL_PROJECT="default-domain:admin"
-CONTRAIL_NETNS_NAME="web_proxy_netns"
+CONTRAIL_NETNS="web_proxy_netns"
 CONTRAIL_VM_NAME="web_proxy_vm"
 CONTRAIL_NET_NAME="public"
