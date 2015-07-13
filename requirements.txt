@@ -1,5 +1,0 @@
-python-gevent
-python-flask
-nginx>=1.8.0
-mongodb
-python-pymongo
