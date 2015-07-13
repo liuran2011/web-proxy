@@ -300,7 +300,8 @@ class ContrailVethPort(object):
             ret = self.create()
             print format_dict(ret, self.args['format'])
 
-if __name__ == '__main__':
-    c=ContrailVethPort()
-    c.main()
+def main():
+    ContrailVethPort().main()
 
+if __name__ == '__main__':
+    main()
