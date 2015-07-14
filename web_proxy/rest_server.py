@@ -9,6 +9,7 @@ from proxy_mgr import ProxyMgr
 import re
 from auth import Auth
 from utils import MD5
+from transparent_proxy import TransparentProxyMgr
 
 class RestServer(object):
     URI_PREFIX="uriPrefix"
@@ -22,6 +23,7 @@ class RestServer(object):
     MAIN_PAGE="mainPage"
     URL="url"
     PASSWORD="password"
+    LOCATION="location"
 
     def __init__(self,conf,log,db):
         self.conf=conf
@@ -30,12 +32,25 @@ class RestServer(object):
 
         self.global_cfg=GlobalConfig(self.conf,self.log,self.db)
         self.proxy_mgr=ProxyMgr(self.conf,self.log,self.db)
+        self.trans_proxy_mgr=TransparentProxyMgr(self.conf,self.log,self.db)
         self.nginx_mgr=NginxManager(self.conf,self.log,self.db,self.global_cfg,self.proxy_mgr)
         self.token_mgr=TokenMgr(self.conf,self.log,self.db)
         self.user_mgr=UserMgr(self.conf,self.log,self.db)
         self.auth=Auth(self.conf,self.log,self.token_mgr,self.user_mgr,self.proxy_mgr)
 
         self.app=Flask(__name__)
+        self.app.add_url_rule(self.conf.url_prefix+'/trans_proxy',
+                             'add_trans_proxy',
+                             self._add_trans_proxy,
+                             methods=['POST'])
+        self.app.add_url_rule(self.conf.url_prefix+'/trans_proxy/<string:location>',
+                             'del_trans_proxy',
+                             self._del_trans_proxy,
+                             methods=['DELETE'])
+        self.app.add_url_rule(self.conf.url_prefix+'/trans_proxy_sync',
+                              'trans_proxy_sync',
+                              self._sync_trans_proxy,
+                              methods=['POST'])
         self.app.add_url_rule(self.conf.url_prefix+'/basic_auth',
                             'basic_auth',
                             self._basic_auth,
@@ -64,7 +79,39 @@ class RestServer(object):
                             'del_proxy_config',
                             self._del_proxy_config,
                             methods=['DELETE'])
- 
+
+    def _sync_trans_proxy(self):
+        self.log.info('sync trans proxy %s'%(request.json))
+
+        if not request.json or not isinstance(request.json,list):
+            return jsonify({RestServer.ERROR:HTTP_BAD_REQUEST_STR}),HTTP_BAD_REQUEST
+        
+        self._add_trans_proxy()
+        
+        for location in self.trans_proxy_mgr.list_proxy():
+            if {RestServer.LOCATION:location} not in request.json:
+                self._del_trans_proxy(location)
+
+    def _del_trans_proxy(self,location):
+        self.log.info("del transparent proxy %s"%location)
+
+        self.trans_proxy_mgr.del_proxy(location)
+
+        return jsonify({RestServer.RESULT:"ok"}),HTTP_OK
+
+    def _add_trans_proxy(self):
+        self.log.info("add transparent proxy %s"%request.json)
+
+        if not request.json or not isinstance(request.json,list):
+            return jsonify({RestServer.ERROR:HTTP_BAD_REQUEST_STR}),HTTP_BAD_REQUEST
+
+        result=[]
+        for req in request.json:
+            location=self.trans_proxy_mgr.add_proxy(req[RestServer.LOCATION])
+            result.append({RestServer.WEB_URL:location})
+
+        return jsonify({RestServer.URL:result}),HTTP_OK
+
     def _add_proxy_config(self):
         self.log.info("add_proxy_config %s"%request.json)
 
