@@ -7,9 +7,19 @@ WEB_PROXY_DEFAULT_LOG_PATH="/var/log/web_proxy"
 WEB_PROXY_MIN_PORT=22222
 WEB_PROXY_MAX_PORT=33333
 
-TRANSPARENT_PROXY_DEFAULT_PORT=80
+TRANS_PROXY_DEFAULT_PORT=80
 
 NGINX_CONFIG_PATH="/etc/nginx"
+
+NGINX_TRANS_PROXY_FILE_TEMPLATE="""
+    server {
+        listen %d;
+        error_log %s %s;
+        proxy_intercept_errors on;
+        location / {
+            proxy_pass %s;
+        }
+    }"""
 
 NGINX_WEB_PROXY_FILE_TEMPLATE="""
     server {

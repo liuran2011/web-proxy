@@ -25,5 +25,19 @@ class URL(object):
         return url_comps.scheme+"://"+url_comps.netloc
 
     @staticmethod
+    def get_comps(url):
+        url_comps=urlparse.urlparse(url)
+        net_locs=url_comps.netloc.split(':')
+
+        if len(net_locs)==2:
+            return url_comps.scheme,net_locs[0],int(net_locs[1])
+
+        return url_comps.scheme,net_locs[0],None
+
+    @staticmethod
+    def get_scheme(url):
+        return urlparse.urlparse(url).scheme 
+
+    @staticmethod
     def get_path(url):
         return urlparse.urlparse(url).path

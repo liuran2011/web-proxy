@@ -1,4 +1,5 @@
 import urlparse
+from db import DB
 
 class TransparentProxyMgr(object):
     def __init__(self,conf,log,db):
@@ -6,25 +7,21 @@ class TransparentProxyMgr(object):
         self.db=db
         self.log=log
 
-    def add_proxy(self,location):
-        url_comps=urlparse.urlparse(location)
-        net_locs=url_comps.netloc.split(':')
-        port=TRANSPARENT_PROXY_DEFAULT_PORT
-        
-        if len(net_locs)>=2:
-            self.log.info("location %s has no port, set port to %s"%(location,
-                    TRANSPARENT_PROXY_DEFAULT_PORT))
-            port=net_locs[1]
-
+    def add_proxy(self,location,port):
         if not self.db.find_one(DB.TRANS_PROXY_TABLE,{DB.LOCATION_KEY:location}):
-            self.db.insert(DB.TRANS_PROXY_TABLE,{DB.LOCATION_KEY:location})
-
-        return url_comps.scheme+"//"+self.conf.proxy_public_address+":"+str(port)
+            self.db.insert(DB.TRANS_PROXY_TABLE,{DB.LOCATION_KEY:location,DB.PORT_KEY:port})
 
     def del_proxy(self,location):
         self.db.remove(DB.TRANS_PROXY_TABLE,{DB.LOCATION_KEY:location})
 
+    def find_proxy(self,location):
+        proxy_map=self.db.find_one(DB.TRANS_PROXY_TABLE,{DB.LOCATION_KEY:location})
+        if not proxy_map:
+            return None
+
+        return proxy_map[DB.PORT_KEY]
+        
     def list_proxy(self):
         res=self.db.find(DB.TRANS_PROXY_TABLE,None)
         for node in res:
-            yield node[DB.LOCATION_KEY]
+            yield node[DB.LOCATION_KEY],node[DB.PORT_KEY]

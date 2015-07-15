@@ -6,30 +6,35 @@ from utils import URL
 class NginxManager(object):
 
     WEB_PROXY_PREFIX="nfcloud_si_"
+    TRANS_PROXY_PREFIX="transparent_proxy"
 
-    def __init__(self,conf,log,db,global_cfg,proxy_mgr):
+    def __init__(self,conf,log,db,global_cfg,proxy_mgr,trans_proxy_mgr):
         self.conf=conf
         self.log=log
         self.db=db
         self.global_cfg=global_cfg
         self.proxy_mgr=proxy_mgr
+        self.trans_proxy_mgr=trans_proxy_mgr
 
         self.port_mgr=PortMgr(self.log,self.conf,self.db)
 
         self._load_proxy_config()
 
     def _load_proxy_config(self):
-        path=self.conf.nginx_config_path+"/conf.d"
-        
+        path='/'.join([self.conf.nginx_config_path,'conf.d'])
         for entry in os.listdir(path):
-            if not entry.startswith(NginxManager.WEB_PROXY_PREFIX):
+            if (not entry.startswith(NginxManager.WEB_PROXY_PREFIX)
+                and not entry.startswith(NginxManager.TRANS_PROXY_PREFIX)):
                 continue
-            
+
             os.remove('/'.join([path,entry]))
         
         for uri_prefix,web_url,port in self.proxy_mgr.list_proxy():
             self._add_proxy_nginx(uri_prefix,web_url,port)
-        
+       
+        for location,port in self.trans_proxy_mgr.list_proxy():
+            self._add_trans_proxy_nginx(location,port)
+
         self._reload()
 
     def _reload(self):
@@ -47,6 +52,57 @@ class NginxManager(object):
         url="http://"+self.conf.proxy_public_address+":"+str(port)+path
 
         return url
+
+    def _add_trans_proxy_nginx(self,location,port):
+        prefix=self._trans_proxy_nginx_file_id(port)
+        config_file=self._nginx_config_file(prefix)
+
+        with open(config_file,"w") as f:
+            config=NGINX_TRANS_PROXY_FILE_TEMPLATE%(port,
+                                                  self._nginx_log_file(prefix),
+                                                  self._nginx_log_level(),
+                                                  location)
+            f.write(config)
+            f.close()
+
+    def _trans_url(self,scheme,port):
+        return scheme+"://"+self.conf.proxy_public_address+":"+str(port)
+
+    def _trans_proxy_nginx_file_id(self,port):
+        return '_'.join([NginxManager.TRANS_PROXY_PREFIX,str(port)])
+
+    def add_trans_proxy(self,location):
+        port=self.trans_proxy_mgr.find_proxy(location)
+        if port:
+            return self._trans_url(URL.get_scheme(location),port)
+       
+        port=self.port_mgr.alloc_port()
+        if not port:
+            self.log.error("trans proxy alloc port failed.")
+            return None
+
+        self._add_trans_proxy_nginx(location,port)
+
+        self.trans_proxy_mgr.add_proxy(location,port)
+
+        self._reload()
+
+        return self._trans_url(URL.get_scheme(location),port)
+
+    def del_trans_proxy(self,location):
+        port=self.trans_proxy_mgr.find_proxy(location)
+        if not port:
+            return
+
+        self.port_mgr.free_port(port)
+
+        prefix=self._trans_proxy_nginx_file_id(port)
+        self._del_proxy_nginx(prefix)
+        self._del_proxy_log(prefix)
+
+        self.trans_proxy_mgr.del_proxy(location)
+
+        self._reload()
 
     def add_proxy(self,uri_prefix,proxy_uri):
         port,web_url=self.proxy_mgr.find_proxy(uri_prefix)
@@ -78,7 +134,7 @@ class NginxManager(object):
 
         with open(config_file,"w") as f:
             config=NGINX_WEB_PROXY_FILE_TEMPLATE%(port,
-                                                  self.conf.log_path+"/"+uri_prefix+'_proxy.log',
+                                                  self._nginx_log_file(uri_prefix),
                                                   self._nginx_log_level(),
                                                   os.getcwd()+'/static',
                                                   self.conf.rest_server_address,
@@ -90,20 +146,28 @@ class NginxManager(object):
             f.write(config)
             f.close()
 
-    def _del_proxy_nginx(self,uri_prefix):
-        path=self.conf.nginx_config_path+"/conf.d/"+uri_prefix+".conf"
+    def _nginx_config_file(self,prefix):
+        return '/'.join([self.conf.nginx_config_path,'conf.d',prefix+".conf"])
+
+    def _nginx_log_file(self,prefix):
+        return '/'.join([self.conf.log_path,prefix+'_proxy.log'])
+
+    def _del_proxy_nginx(self,file_prefix):
+        path=self._nginx_config_file(file_prefix)
         if os.path.exists(path) and os.path.isfile(path):
             os.remove(path)
-      
+    
+    def _del_proxy_log(self,prefix):
+        path=self._nginx_log_file(prefix)
+        if os.path.exists(path) and os.path.isfile(path):
+            os.remove(path)
+
     def del_proxy(self,uri_prefix):
         self.log.info("nginx del proxy uri_prefix:%s"%(uri_prefix))
         
         self._del_proxy_nginx(uri_prefix)
-
-        path=self.conf.log_path+"/"+uri_prefix+"_proxy.log"
-        if os.path.exists(path) and os.path.isfile(path):
-            os.remove(path)
-
+        self._del_proxy_log(uri_prefix)
+        
         port,web_url=self.proxy_mgr.find_proxy(uri_prefix)
         if port:
             self.port_mgr.free_port(int(port))

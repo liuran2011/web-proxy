@@ -10,6 +10,7 @@ import re
 from auth import Auth
 from utils import MD5
 from transparent_proxy import TransparentProxyMgr
+from constants import *
 
 class RestServer(object):
     URI_PREFIX="uriPrefix"
@@ -33,7 +34,9 @@ class RestServer(object):
         self.global_cfg=GlobalConfig(self.conf,self.log,self.db)
         self.proxy_mgr=ProxyMgr(self.conf,self.log,self.db)
         self.trans_proxy_mgr=TransparentProxyMgr(self.conf,self.log,self.db)
-        self.nginx_mgr=NginxManager(self.conf,self.log,self.db,self.global_cfg,self.proxy_mgr)
+        self.nginx_mgr=NginxManager(self.conf,self.log,
+                                    self.db,self.global_cfg,
+                                    self.proxy_mgr,self.trans_proxy_mgr)
         self.token_mgr=TokenMgr(self.conf,self.log,self.db)
         self.user_mgr=UserMgr(self.conf,self.log,self.db)
         self.auth=Auth(self.conf,self.log,self.token_mgr,self.user_mgr,self.proxy_mgr)
@@ -86,16 +89,27 @@ class RestServer(object):
         if not request.json or not isinstance(request.json,list):
             return jsonify({RestServer.ERROR:HTTP_BAD_REQUEST_STR}),HTTP_BAD_REQUEST
         
-        self._add_trans_proxy()
+        result,code=self._add_trans_proxy()
         
-        for location in self.trans_proxy_mgr.list_proxy():
+        for location,port in self.trans_proxy_mgr.list_proxy():
             if {RestServer.LOCATION:location} not in request.json:
-                self._del_trans_proxy(location)
+                self.nginx_mgr.del_trans_proxy(location)
+
+        return result,code
 
     def _del_trans_proxy(self,location):
         self.log.info("del transparent proxy %s"%location)
 
-        self.trans_proxy_mgr.del_proxy(location)
+        url_comps=location.split('_')
+        if len(url_comps)<2:
+            return jsonify({RestServer.ERROR:HTTP_BAD_REQUEST_STR}),HTTP_BAD_REQUEST
+
+        port=TRANS_PROXY_DEFAULT_PORT
+        if len(url_comps)>2:
+            port=url_comps[2]
+        
+        url=url_comps[0]+"://"+url_comps[1]+":"+port
+        self.nginx_mgr.del_trans_proxy(url)
 
         return jsonify({RestServer.RESULT:"ok"}),HTTP_OK
 
@@ -107,8 +121,13 @@ class RestServer(object):
 
         result=[]
         for req in request.json:
-            location=self.trans_proxy_mgr.add_proxy(req[RestServer.LOCATION])
-            result.append({RestServer.WEB_URL:location})
+            location=req[RestServer.LOCATION]
+            url=self.nginx_mgr.add_trans_proxy(location)
+            
+            if not url:
+                result.append({RestServer.LOCATION:location,RestServer.WEB_URL:""})
+            else:
+                result.append({RestServer.LOCATION:location,RestServer.WEB_URL:url})
 
         return jsonify({RestServer.URL:result}),HTTP_OK
 
