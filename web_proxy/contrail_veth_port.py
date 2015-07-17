@@ -6,6 +6,7 @@ import netaddr
 import argparse
 from constants import *
 import ConfigParser
+import urlparse
 
 sys.path.append('/usr/lib/python2.7/dist-packages/contrail_vrouter_api/gen_py')
 sys.path.append('/usr/share/contrail-utils')
@@ -52,8 +53,11 @@ class ContrailVethPort(object):
             "project":CONTRAIL_PROJECT,
             "netns":CONTRAIL_NETNS,
             "auth_url":AUTH_URL,
+            "auth_user":AUTH_USER,
+            "auth_tenant":AUTH_TENANT,
+            "auth_password":AUTH_PASSWORD,
             "vm_name":CONTRAIL_VM_NAME,
-            "net_name":CONTRAIL_NET_NAME
+            "net_name":CONTRAIL_NET_NAME,
         }
 
         args,remain_argv=parser.parse_known_args()
@@ -81,6 +85,15 @@ class ContrailVethPort(object):
             "--auth_url",
             help="openstack auth url")  
         parser.add_argument(
+            "--auth_user",
+            help="openstack auth username")
+        parser.add_argument(
+            "--auth_tenant",
+            help="openstack auth tenant")
+        parser.add_argument(
+            "--auth_password",
+            help="openstack auth password")
+        parser.add_argument(
             "--netns",
             help=("Name of the network namespace to put the veth interface in."
                   + "   Default: virtual network name"))
@@ -95,10 +108,22 @@ class ContrailVethPort(object):
 
     def vnc_connect(self):
         if not self.vnc_client:
-            self.vnc_client = vnc_api.VncApi(
+            url_comps=urlparse.urlparse(self.args['auth_url'])
+            netlocs=url_comps.netloc.split(':') 
+            host=netlocs[0]
+            port=AUTH_PORT
+            if len(netlocs)>=2:
+                port=netlocs[1]
+            print host,port    
+            self.vnc_client = vnc_api.VncApi(username=self.args['auth_user'],
+                password=self.args['auth_password'],
+                tenant_name=self.args['auth_tenant'],
                 api_server_host=self.args['api_server'],
                 api_server_port=self.args['api_port'],
-                auth_url=self.args['auth_url'])
+                auth_protocol=url_comps.scheme,
+                auth_host=host,
+                auth_port=port,
+                auth_type="keystone")
         return self.vnc_client
         
     def create(self):
