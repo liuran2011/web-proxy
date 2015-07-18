@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+﻿#! /usr/bin/env python
 
 import sys
 import os
@@ -159,17 +159,20 @@ class ContrailVethPort(object):
             vnet = vnc_client.virtual_network_read(fq_name = vnet_fq_name)
 
             # find or create the vmi
-            vmi_fq_name = vm.fq_name + ['0']
+            vmi_fq_name = proj_fq_name+['web_proxy_vmi']
             vmi_created = False
             try:
                 vmi = vnc_client.virtual_machine_interface_read(
                     fq_name = vmi_fq_name)
             except cfgm_common.exceptions.NoIdError:
                 vmi = vnc_api.VirtualMachineInterface(
-                    parent_type = 'virtual-machine',
+                    parent_type = 'project',
                     fq_name = vmi_fq_name)
                 vmi_created = True
+
             vmi.set_virtual_network(vnet)
+            vmi.set_virtual_machine(vm)
+
             if vmi_created:
                 vnc_client.virtual_machine_interface_create(vmi)
             else:
@@ -293,11 +296,11 @@ class ContrailVethPort(object):
         vnc_client = self.vnc_connect()
         
         proj_fq_name = self.args['project'].split(':')
-        vm_fq_name = proj_fq_name + [ self.args['vm_name'] ]
+        vm_fq_name = [ self.args['vm_name'] ]
         try:
             # delete all dependent VMIs and IPs then delete the VM
             vm = vnc_client.virtual_machine_read(fq_name = vm_fq_name)
-            for vmi in vm.get_virtual_machine_interfaces():
+            for vmi in vm.get_virtual_machine_interface_back_refs():
                 try:
                     vmi = vnc_client.virtual_machine_interface_read(
                         id=vmi['uuid'])
