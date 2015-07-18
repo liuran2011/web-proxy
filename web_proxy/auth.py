@@ -1,10 +1,11 @@
-from http_codes import *
+﻿from http_codes import *
 import re
 from keystone import KeyStone
 from flask import redirect
 import urlparse
 from utils import MD5
 from constants import *
+import urllib2
 
 class Auth(object):
     def __init__(self,conf,log,token_mgr,user_mgr,proxy_mgr):
@@ -91,7 +92,7 @@ class Auth(object):
         self.token_mgr.add_token(username,token)
 
         url_comps=urlparse.urlparse(web_url)
-        url="http://"+host+":"+port+url_comps.path+"?username="+username+"&token="+MD5.get(token)
+        url="http://"+host+":"+port+url_comps.path+"?username="+urllib2.quote(username.encode('utf8'))+"&token="+MD5.get(token)
         self.log.info("redirect to :%s"%url)
 
         return redirect(url)
