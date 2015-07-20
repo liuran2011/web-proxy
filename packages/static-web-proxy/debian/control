@@ -1,0 +1,16 @@
+Source: web-proxy
+Section: web
+Priority: optional
+Maintainer: liuran <liuran@fnic.cn>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.4
+Homepage: 
+#Vcs-Git: git://git.debian.org/collab-maint/web-proxy.git
+#Vcs-Browser: http://git.debian.org/?p=collab-maint/web-proxy.git;a=summary
+
+Package: static-web-proxy
+Architecture: any
+Depends: 
+Description: Static files for web proxy.
+	This package contains static files, such as *.html, *.css or *.js 
+files for web proxy function.
