@@ -1,0 +1,19 @@
+Source: web-proxy
+Section: python
+Priority: optional
+Maintainer: liuran <liuran@fnic.cn>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.4
+Homepage: 
+
+Package: python-web-proxy
+Architecture: any
+Depends: 
+    nginx (>=1.8.0),
+    python-gevent,
+    python-flask,
+    mongodb,
+    python-pymongo
+Description: Python source code for web proxy.
+    This package contains python source code for 
+    web proxy function.
