@@ -23,6 +23,6 @@ do
 done
 
 echo "contrail-vrouter-agent start ok. start web_proxy.py" >>$log_file
-cd /home/web-proxy
-./deploy.sh
-./start.sh
+cd /home/web-proxy/web_proxy
+../deploy.sh
+../start.sh
