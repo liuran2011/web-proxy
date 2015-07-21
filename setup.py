@@ -12,7 +12,6 @@ setup(
             'flask',
             'pymongo'
     ],
-    package_data={'':['*.html','*.css']},
     entry_points={
         'console_scripts':[
             'web-proxy=web_proxy.web_proxy:web_proxy_main',

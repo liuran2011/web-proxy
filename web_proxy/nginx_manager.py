@@ -136,7 +136,7 @@ class NginxManager(object):
             config=NGINX_WEB_PROXY_FILE_TEMPLATE%(port,
                                                   self._nginx_log_file(uri_prefix),
                                                   self._nginx_log_level(),
-                                                  os.getcwd()+'/static',
+                                                  WEB_PROXY_STATIC_PATH,
                                                   self.conf.rest_server_address,
                                                   self.conf.rest_server_port,
                                                   URL.get_base(proxy_uri),
