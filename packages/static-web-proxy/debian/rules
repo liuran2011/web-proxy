@@ -9,5 +9,8 @@
 
 override_dh_install:
 	dh_install --fail-missing 
-	echo xxxxxx
-	echo $(CURDIR)
+	for entry in $(shell cd $(SB_TOP); find static); do  \
+		if [ -f "$(SB_TOP)/$$entry" ]; then  \
+			install -D -m 0644 $(SB_TOP)/$$entry $(CURDIR)/debian/static-web-proxy/usr/share/web-proxy/$$entry; \
+		fi \
+	done

@@ -13,4 +13,4 @@ Architecture: any
 Depends: 
 Description: Static files for web proxy.
 	This package contains static files, such as *.html, *.css or *.js 
-files for web proxy function.
+        files for web proxy function.
