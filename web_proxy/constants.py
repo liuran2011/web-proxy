@@ -83,3 +83,5 @@ CONTRAIL_PROJECT="default-domain:admin"
 CONTRAIL_NETNS="web_proxy_netns"
 CONTRAIL_VM_NAME="web_proxy_vm"
 CONTRAIL_NET_NAME="public"
+
+DEFAULT_BRIDGE_NAME="web_proxy_br"

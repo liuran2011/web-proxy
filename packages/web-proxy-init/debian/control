@@ -1,0 +1,16 @@
+Source: web-proxy
+Section: config 
+Priority: optional
+Maintainer: liuran <liuran@fnic.cn>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.4
+Homepage: 
+
+Package: web-proxy-init
+Architecture: any
+Depends: supervisor,
+	python-web-proxy, 
+	static-web-proxy
+Description: Initialize and configuration files for web proxy
+	This package contains init and config files for web proxy
+	function.

@@ -1,4 +1,4 @@
-﻿from http_codes import *
+from http_codes import *
 import re
 from keystone import KeyStone
 from flask import redirect

@@ -10,6 +10,8 @@ Package: python-web-proxy
 Architecture: any
 Depends: 
     nginx (>=1.8.0),
+    python-netifaces,
+    python-netaddr,
     python-gevent,
     python-flask,
     mongodb,

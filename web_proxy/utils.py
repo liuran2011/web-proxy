@@ -1,5 +1,6 @@
 import hashlib
 import urlparse
+import netifaces
 
 class MD5(object):
     @staticmethod
@@ -41,3 +42,17 @@ class URL(object):
     @staticmethod
     def get_path(url):
         return urlparse.urlparse(url).path
+
+class Net(object):
+    @staticmethod
+    def intf_exist(name):
+        return name in netifaces.interfaces()
+
+    @staticmethod
+    def get_ip(phy_if):
+        try:
+            addr_info=netifaces.ifaddresses(phy_if)[netifaces.AF_INET][0]
+            return addr_info['addr'],addr_info['netmask']
+        except:
+            return None,None
+

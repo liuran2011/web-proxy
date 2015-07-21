@@ -10,12 +10,14 @@ setup(
     install_requires=[
             'gevent',
             'flask',
-            'pymongo'
+            'pymongo',
+            'netaddr',
+            'netifaces'
     ],
     entry_points={
         'console_scripts':[
             'web-proxy=web_proxy.web_proxy:web_proxy_main',
-            'contrail-veth-port=web_proxy.contrail_veth_port:main',
+            'web-proxy-wrapper=web_proxy.web_proxy_wrapper:main',
         ]
     }
 )

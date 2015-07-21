@@ -5,6 +5,7 @@ import copy
 import sys
 
 from constants import *
+from utils import Net
 
 class Config:
     def __init__(self):
@@ -19,14 +20,25 @@ class Config:
         if self.rest_server_address=="127.0.0.1":
             print "rest server address %s invalid"%(self.rest_server_address)
             sys.exit(1)
-        
+
+	address,netmask=Net.get_ip(self.physical_interface)
+        if not address:
+            print "query physical interface %s address failed"%(self.physical_interface)
+            sys.exit(1)
+
+        self.mongodb_address=address
+
         if not self.mongodb_address:
             print "mongodb address %s invalid"%(self.mongodb_address)
             sys.exit(1)
 
     @property
+    def physical_interface(self):
+        return self.args.physical_interface
+
+    @property
     def mongodb_address(self):
-        return self.args.mongodb_address
+        return self.mongodb_address
 
     @property
     def mongodb_port(self):
@@ -79,7 +91,10 @@ class Config:
 
         parser=ConfigParser.ConfigParser()
         parser.read(config_file)
-     
+    
+        if parser.has_section('default'):
+            default_args.update(dict(parser.items('default')))
+ 
         if parser.has_section('nginx'):
             default_args.update(dict(parser.items('nginx')))
 
