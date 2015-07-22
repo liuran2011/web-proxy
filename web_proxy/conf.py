@@ -21,14 +21,9 @@ class Config:
             print "rest server address %s invalid"%(self.rest_server_address)
             sys.exit(1)
 
-	address,netmask=Net.get_ip(self.physical_interface)
-        if not address:
-            print "query physical interface %s address failed"%(self.physical_interface)
-            sys.exit(1)
-
-        self.mongodb_address=address
-
-        if not self.mongodb_address:
+        if (not self.mongodb_address
+            or self.mongodb_address=="127.0.0.1" 
+            or self.mongodb_address=="0.0.0.0"):
             print "mongodb address %s invalid"%(self.mongodb_address)
             sys.exit(1)
 
@@ -38,7 +33,7 @@ class Config:
 
     @property
     def mongodb_address(self):
-        return self.mongodb_address
+        return self.args.physical_interface_address
 
     @property
     def mongodb_port(self):

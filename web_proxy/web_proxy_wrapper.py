@@ -32,11 +32,6 @@ class WebProxyWrapper(object):
             print "physical interface %s not exist"%(phy_if)
             sys.exit(1)
 
-        if_addr,netmask=Net.get_ip(phy_if)
-        if not if_addr:
-            print "get interface %s ip address failed"%(phy_if)
-            sys.exit(1)
-
         proxy_public_address=self._config.get('proxy_public_address',None) 
         if (not proxy_public_address 
             or proxy_public_address == "127.0.0.1" 
@@ -44,9 +39,13 @@ class WebProxyWrapper(object):
             print "invalid proxy_public_address in config file %s"%(cfg_file)
             sys.exit(1)
 
-        self._config['physical_interface_address']=if_addr
-        self._config['physical_interface_netmask']=netmask
-        
+        physical_address=self._config.get('physical_interface_address',None)
+        if (not physical_address 
+            or physical_address=="127.0.0.1" 
+            or physical_address=="0.0.0.0"):
+            print "invalid physical address %s"%(physical_address)
+            sys.exit(1)
+
         self._veth=ContrailVethPort()
 
     def _parse_config(self,cfg_file):
@@ -114,9 +113,6 @@ class WebProxyWrapper(object):
 
     def _netns_proc(self):
         netns=self._config['netns']
-        cmd="ip link set vewebproxyin netns "+netns
-        os.system(cmd)
-
         cmd="ip link set vewebproxyin netns "+netns
         os.system(cmd)
 
